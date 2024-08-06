@@ -62,7 +62,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     # Start Training
     print()
     train = loops.Train(model, train_loader, optimizer, criterion, metric_iou, metric_pa, args.device)
-    val = loops.Test(model, val_loader, criterion, metric_iou, args.device)
+    val = loops.Test(model, val_loader, criterion, metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
         print(">>>> [Epoch: {0:d}] Training".format(epoch))
 
