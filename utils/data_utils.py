@@ -1,7 +1,7 @@
 import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
-import transforms as ext_transforms
+from transforms import PILToLongTensor, LongTensorToRGBPIL
 from PIL import Image
 
 from utils import batch_transform, imshow_batch
@@ -16,11 +16,11 @@ def load_dataset(dataset, args):
 
     image_transform = transforms.Compose(
         [transforms.Resize((args.height, args.width)),
-         transforms.ToTensor()])
+        transforms.ToTensor()])
 
     label_transform = transforms.Compose([
         transforms.Resize((args.height, args.width), Image.NEAREST),
-        ext_transforms.PILToLongTensor()
+        PILToLongTensor()
     ])
 
     # Get selected dataset
@@ -88,7 +88,7 @@ def load_dataset(dataset, args):
     if args.imshow_batch:
         print("Close the figure window to continue...")
         label_to_rgb = transforms.Compose([
-            ext_transforms.LongTensorToRGBPIL(class_encoding),
+            LongTensorToRGBPIL(class_encoding),
             transforms.ToTensor()
         ])
         color_labels = batch_transform(labels, label_to_rgb)
