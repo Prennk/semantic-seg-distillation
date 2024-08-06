@@ -18,7 +18,7 @@ weighting: enet
 ignore_unlabeled: True
 
 # Settings
-worker: 4
+workers: 4
 print_step: false
 imshow_batch: false
 device: cuda
