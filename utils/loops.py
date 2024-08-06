@@ -40,7 +40,7 @@ class Train:
         epoch_loss = 0.0
         self.metric_iou.reset()
         self.metric_pa.reset()
-        for step, batch_data in enumerate(tqdm(self.data_loader), desc="Training"):
+        for step, batch_data in enumerate(tqdm(self.data_loader, desc="Training")):
             # Get the inputs and labels
             inputs = batch_data[0].to(self.device)
             labels = batch_data[1].to(self.device)
