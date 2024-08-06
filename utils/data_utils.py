@@ -79,7 +79,7 @@ def load_dataset(dataset, args):
     if args.mode.lower() == 'test':
         images, labels = next(iter(test_loader))
     else:
-        images, labels = inext(ter(train_loader))
+        images, labels = next(iter(train_loader))
     print("Image size:", images.size())
     print("Label size:", labels.size())
     print("Class-color encoding:", class_encoding)
