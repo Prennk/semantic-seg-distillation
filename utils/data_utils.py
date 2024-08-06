@@ -1,7 +1,7 @@
 import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
-from transforms import PILToLongTensor, LongTensorToRGBPIL
+from utils.transforms import PILToLongTensor, LongTensorToRGBPIL
 from PIL import Image
 
 from utils import batch_transform, imshow_batch
