@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from PIL import Image
 from collections import OrderedDict
-from torchvision.transforms import ToPILImage
+from torchvision.transforms import ToPILImage, ToTensor
 
 
 class PILToLongTensor(object):
@@ -32,18 +32,19 @@ class PILToLongTensor(object):
             # backward compatibility
             return img.long()
 
-        # Convert PIL image to numpy array
-        np_image = np.array(pic.transpose((2, 0, 1)))
+        # Convert PIL image to ByteTensor
+        to_tensor = ToTensor()
+        img = to_tensor(pic) * 255
+        img = img.byte()
 
-        # convert numpy array to tensor
-        img = torch.from_numpy(np_image).clone().detach()
+        # # Reshape tensor
+        # nchannel = len(pic.mode)
+        # img = img.view(pic.size[1], pic.size[0], nchannel)
 
-        # Reshape tensor
-        nchannel = len(pic.mode)
-        img = img.view(pic.size[1], pic.size[0], nchannel)
+        # # Convert to long and squeeze the channels
+        # return img.transpose(0, 1).transpose(0, 2).contiguous().long().squeeze_()
 
-        # Convert to long and squeeze the channels
-        return img.transpose(0, 1).transpose(0, 2).contiguous().long().squeeze_()
+        return img.long().permute(1, 2, 0).contiguous().squeeze_()
 
 
 class LongTensorToRGBPIL(object):
