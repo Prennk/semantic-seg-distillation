@@ -265,7 +265,9 @@ class PixelAccuracy(Metric):
             conf_matrix[self.ignore_index, :] = 0
         true_positive = np.diag(conf_matrix)
         total_pixel_per_class = np.sum(conf_matrix, axis=1)
-        accuracy_per_class = true_positive / total_pixel_per_class
-        mpa = np.nanmean(accuracy_per_class) # to avoid nan
 
-        return accuracy_per_class, mpa
+        # Just in case we get a division by 0, ignore/hide the error
+        with np.errstate(divide='ignore', invalid='ignore'):
+            accuracy_per_class = true_positive / total_pixel_per_class
+
+        return accuracy_per_class, np.nanmean(accuracy_per_class) # to avoid nan
