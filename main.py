@@ -124,7 +124,7 @@ def test(model, test_loader, class_weights, class_encoding):
 
     # Print per class IoU
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-        print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
+        print("{:<10} => IoU: {:>5.4f} | PA: {:>5.4f}".format(key, class_iou, class_pa))
 
     # Show a batch of samples and labels
     if args.imshow_batch:
