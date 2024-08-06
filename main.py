@@ -64,24 +64,24 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     train = loops.Train(model, train_loader, optimizer, criterion, metric_iou, metric_pa, args.device)
     val = loops.Test(model, val_loader, criterion, metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
-        print(">>>> [Epoch: {0:d}] Training".format(epoch))
+        print("[TRAINING]Epoch: {0:d}".format(epoch + 1))
 
         epoch_loss, (iou, miou), (pa, mpa) = train.run_epoch(args.print_step)
         lr_updater.step()
 
-        print(">>>> [Epoch: {0:d}] Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {2:.4f}".format(epoch, epoch_loss, miou, mpa))
+        print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
 
         if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
-            print(">>>> [Epoch: {0:d}] Validation".format(epoch))
+            print("[VALIDATION]Epoch: {0:d}".format(epoch))
 
             loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
 
-            print(">>>> [Epoch: {0:d}] Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {2:.4f}".format(epoch, loss, miou, mpa))
+            print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch, loss, miou, mpa))
 
             # Print per class IoU on last epoch or if best iou
             if epoch + 1 == args.epochs or miou > best_miou:
                 for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-                    print("{0} => IoU: {1:.4f} | PA: {2:.f}".format(key, class_iou, class_pa))
+                    print("{0} => IoU: {1:.4f} | PA: {2:.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
             if miou > best_miou:
@@ -114,13 +114,13 @@ def test(model, test_loader, class_weights, class_encoding):
     # Test the trained model on the test set
     test = loops.Test(model, test_loader, criterion, metric_iou, metric_pa, args.device)
 
-    print(">>>> Running test dataset")
+    print("[TEST]Running test dataset")
 
     loss, (iou, miou), (pa, mpa) = test.run_epoch(args.print_step)
     class_iou = dict(zip(class_encoding.keys(), iou))
     class_pa = dict(zip(class_encoding.keys(), pa))
 
-    print(">>>> Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {1:.4f}".format(loss, miou, mpa))
+    print("[RESULT]Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {1:.4f}".format(loss, miou, mpa))
 
     # Print per class IoU
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
