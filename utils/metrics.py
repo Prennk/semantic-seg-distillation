@@ -260,6 +260,9 @@ class PixelAccuracy(Metric):
             is the mean Pixel Accuracy.
         """
         conf_matrix = self.conf_matrix.value()
+        if self.ignore_index is not None:
+            conf_matrix[:, self.ignore_index] = 0
+            conf_matrix[self.ignore_index, :] = 0
         true_positive = np.diag(conf_matrix)
         total_pixel_per_class = np.sum(conf_matrix, axis=1)
         accuracy_per_class = true_positive / total_pixel_per_class
