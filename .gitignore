@@ -1,5 +1,8 @@
 .idea/
-data/
+data/camvid
+/camvid
+data/citiscapes
+/citiscapes
 output*/
 ckpts/
 *.pth
