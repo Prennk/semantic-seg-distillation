@@ -120,13 +120,11 @@ def test(model, test_loader, class_weights, class_encoding):
     class_iou = dict(zip(class_encoding.keys(), iou))
     class_pa = dict(zip(class_encoding.keys(), pa))
 
-    print("[RESULT]Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {1:.4f}".format(loss, miou, mpa))
+    print("[RESULT]Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
 
     # Print per class IoU
-    # for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-    #     print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
-    for key, class_iou in zip(class_encoding.keys(), iou):
-        print("{:<15} => IoU: {:>10.4f}".format(key, class_iou))
+    for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
+        print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
     # Show a batch of samples and labels
     if args.imshow_batch:
@@ -199,7 +197,8 @@ if __name__ == '__main__':
                                       args.name)[0]
 
         if args.mode.lower() == 'test':
-            print(model)
+            # print(model)
+            print(f"[Info] Model loaded succesfully")
 
         test(model, test_loader, w_class, class_encoding)
 
