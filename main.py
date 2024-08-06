@@ -4,8 +4,9 @@ import torch.optim as optim
 from torchvision import transforms
 import yaml
 from argparse import ArgumentParser
+import os
 
-from utils import utils, loops, metrics, transforms as ext_transforms
+from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
 from model.deeplabv3 import Create_DeepLabV3
 
@@ -150,3 +151,51 @@ def predict(model, images, class_encoding):
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
     utils.imshow_batch(images.data.cpu(), color_predictions)
+
+# Run only if this module is being run directly
+if __name__ == '__main__':
+
+    # Fail fast if the dataset directory doesn't exist
+    assert os.path.isdir(
+        args.dataset_dir), "The directory \"{0}\" doesn't exist.".format(
+            args.dataset_dir)
+
+    # Fail fast if the saving directory doesn't exist
+    assert os.path.isdir(
+        args.save_dir), "The directory \"{0}\" doesn't exist.".format(
+            args.save_dir)
+
+    # Import the requested dataset
+    if args.dataset.lower() == 'camvid':
+        from data import CamVid as dataset
+    elif args.dataset.lower() == 'cityscapes':
+        from data import Cityscapes as dataset
+    else:
+        # Should never happen...but just in case it does
+        raise RuntimeError("\"{0}\" is not a supported dataset.".format(
+            args.dataset))
+
+    loaders, w_class, class_encoding = data_utils.load_dataset(dataset)
+    train_loader, val_loader, test_loader = loaders
+
+    if args.mode.lower() in {'train', 'full'}:
+        model = train(train_loader, val_loader, w_class, class_encoding)
+
+    if args.mode.lower() in {'test', 'full'}:
+        if args.mode.lower() == 'test':
+            # Intialize a new ENet model
+            num_classes = len(class_encoding)
+            model = Create_ENet(num_classes).to(args.device)
+
+        # Initialize a optimizer just so we can retrieve the model from the
+        # checkpoint
+        optimizer = optim.Adam(model.parameters())
+
+        # Load the previoulsy saved model state to the ENet model
+        model = utils.load_checkpoint(model, optimizer, args.save_dir,
+                                      args.name)[0]
+
+        if args.mode.lower() == 'test':
+            print(model)
+
+        test(model, test_loader, w_class, class_encoding)
