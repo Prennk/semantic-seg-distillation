@@ -65,7 +65,9 @@ def load_dataset(dataset, args):
     # Remove the road_marking class from the CamVid dataset as it's merged
     # with the road class
     if args.dataset.lower() == 'camvid':
-        del class_encoding['road_marking']
+        if class_encoding['road_marking']:
+            del class_encoding['road_marking']
+            print(f"[INFO] Deleting 'road_marking' class because it is combined with 'road' class")
 
     # Get number of classes to predict
     num_classes = len(class_encoding)
