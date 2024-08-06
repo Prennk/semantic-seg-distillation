@@ -33,7 +33,7 @@ class PILToLongTensor(object):
             return img.long()
 
         # Convert PIL image to ByteTensor
-        img = torch.tensor(torch.frombuffer(pic.tobytes(), dtype=torch.uint8))
+        img = torch.tensor(torch.frombuffer(pic.tobytes(), dtype=torch.uint8)).clone().detach()
 
         # Reshape tensor
         nchannel = len(pic.mode)
