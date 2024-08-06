@@ -128,4 +128,4 @@ class Test:
             if iteration_loss:
                 print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
-        return epoch_loss / len(self.data_loader), self.metric_pa.value(), self.metric_iou.value()
+        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value()
