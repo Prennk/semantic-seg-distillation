@@ -38,7 +38,8 @@ class Train:
         """
         self.model.train()
         epoch_loss = 0.0
-        self.metric.reset()
+        self.metric_iou.reset()
+        self.metric_pa.reset()
         for step, batch_data in enumerate(tqdm(self.data_loader), desc="Training"):
             # Get the inputs and labels
             inputs = batch_data[0].to(self.device)
@@ -103,7 +104,8 @@ class Test:
         """
         self.model.eval()
         epoch_loss = 0.0
-        self.metric.reset()
+        self.metric_iou.reset()
+        self.metric_pa.reset()
         for step, batch_data in enumerate(tqdm(self.data_loader, desc="Testing")):
             # Get the inputs and labels
             inputs = batch_data[0].to(self.device)
