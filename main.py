@@ -72,11 +72,11 @@ def train(train_loader, val_loader, class_weights, class_encoding):
         print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
 
         if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
-            print("[VALIDATION]Epoch: {0:d}".format(epoch))
+            print("[VALIDATION]Epoch: {0:d}".format(epoch + 1))
 
             loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
 
-            print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch, loss, miou, mpa))
+            print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
 
             # Print per class IoU on last epoch or if best iou
             if epoch + 1 == args.epochs or miou > best_miou:
