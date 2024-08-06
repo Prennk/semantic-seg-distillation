@@ -202,4 +202,4 @@ if __name__ == '__main__':
 
         test(model, test_loader, w_class, class_encoding)
 
-# to do => PA: nan, load weight
+# to do => PA: nan
