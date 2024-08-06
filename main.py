@@ -175,7 +175,7 @@ if __name__ == '__main__':
         raise RuntimeError("\"{0}\" is not a supported dataset.".format(
             args.dataset))
 
-    loaders, w_class, class_encoding = data_utils.load_dataset(dataset)
+    loaders, w_class, class_encoding = data_utils.load_dataset(dataset, args)
     train_loader, val_loader, test_loader = loaders
 
     if args.mode.lower() in {'train', 'full'}:
