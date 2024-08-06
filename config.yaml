@@ -14,7 +14,7 @@ dataset: camvid
 dataset_dir: data/CamVid
 width: 480
 height: 360
-weighting: enet
+weighing: enet
 ignore_unlabeled: True
 
 # Settings
