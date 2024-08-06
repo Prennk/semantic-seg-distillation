@@ -129,7 +129,7 @@ def test(model, test_loader, class_weights, class_encoding):
     # Show a batch of samples and labels
     if args.imshow_batch:
         print("A batch of predictions from the test set...")
-        images, _ = iter(test_loader).next()
+        images, _ = next(iter(test_loader))
         predict(model, images, class_encoding)
 
 
