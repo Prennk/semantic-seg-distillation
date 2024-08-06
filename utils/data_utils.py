@@ -99,7 +99,7 @@ def load_dataset(dataset, args):
     print("Computing class weights...")
     print("(this can take a while depending on the dataset size)")
     class_weights = 0
-    if args.model == 'ENet':
+    if args.model == 'enet':
         if args.weighing.lower() == 'enet':
             class_weights = enet_weighing(train_loader, num_classes)
         elif args.weighing.lower() == 'mfb':

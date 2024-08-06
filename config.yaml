@@ -1,4 +1,5 @@
 mode: train # train => train and test | inference => just test
+model: enet
 resume: false # resume train from checkpoint
 
 # hyperparameter
