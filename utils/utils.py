@@ -117,7 +117,7 @@ def load_checkpoint(model, optimizer, folder_dir, filename):
 
     # Load the stored model parameters to the model instance
     checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint['state_dict'])
+    model.model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     epoch = checkpoint['epoch']
     miou = checkpoint['miou']
