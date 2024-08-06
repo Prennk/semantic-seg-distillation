@@ -121,8 +121,10 @@ def load_checkpoint(model, optimizer, folder_dir, filename):
     optimizer.load_state_dict(checkpoint['optimizer'])
     epoch = checkpoint['epoch']
     miou = checkpoint['miou']
-    if checkpoint['mpa']:
+    if 'mpa' in checkpoint:
         mpa = checkpoint['mpa']
+    else:
+        mpa = 0.0
 
     return model, optimizer, epoch, miou, mpa
 
