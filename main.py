@@ -20,10 +20,10 @@ with open(args.config, 'r') as f:
 args = utils.merge_args_with_config(args, config)
 
 print("-" * 70)
-print("| Config" + " " * 62 + "|")
+print("| Config" + " " * 63 + "|")
 print("-" * 70)
 for key, value in vars(args).items():
-    print(f"| {key}: {value}" + " " * (68 - len(f"{key}: {value}")) + "|")
+    print(f"| {key}: {value}" + " " * (69 - len(f"{key}: {value}")) + "|")
 print("-" * 70)
 print()
 
