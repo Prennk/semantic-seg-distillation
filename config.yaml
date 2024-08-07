@@ -1,9 +1,13 @@
 mode: train # train => train and test | inference => just test
-model: deeplabv3 # enet / deeplabv3 / deeplabv3_pretrained
+model: deeplabv3 # enet / deeplabv3
 resume: false # resume train from checkpoint
 
+# deeplabv3 settings
+pretrained: true
+freeze: layer
+
 # hyperparameter
-batch_size: 8
+batch_size: 10
 epochs: 300
 learning_rate: 0.0005
 lr_decay: 0.1

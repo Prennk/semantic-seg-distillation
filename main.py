@@ -28,11 +28,9 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     if args.model == 'enet':
         model = Create_ENet(num_classes).to(args.device)
     elif args.model == 'deeplabv3':
-        model = Create_DeepLabV3(num_classes, pretrained=False).to(args.device)
-    elif args.model == 'deeplabv3_pretrained':
-        model = Create_DeepLabV3(num_classes, pretrained=True).to(args.device)
+        model = Create_DeepLabV3(num_classes, pretrained=args.pretrained, freeze=args.freeze).to(args.device)
     else:
-        raise TypeError('Invalid model name. Available models are enet, deeplabv3, deeplabv3_pretrained')
+        raise TypeError('Invalid model name. Available models are enet and deeplabv3')
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
