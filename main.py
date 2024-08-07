@@ -95,7 +95,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             # Print per class IoU on last epoch or if best iou
             if epoch + 1 == args.epochs or miou > best_miou:
                 for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-                    print("{0} => IoU: {1:.4f} | PA: {2:.4f}".format(key, class_iou, class_pa))
+                    print("{:<10} => IoU: {:>5.4f} | PA: {:>5.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
             if miou > best_miou:
