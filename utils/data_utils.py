@@ -8,8 +8,7 @@ from utils.utils import batch_transform, imshow_batch
 from data.utils import enet_weighing, median_freq_balancing
 
 def load_dataset(dataset, args):
-    print("\nLoading dataset...\n")
-
+    print("Loading dataset...")
     print("Selected dataset:", args.dataset)
     print("Dataset directory:", args.dataset_dir)
     print("Save directory:", args.save_dir)
@@ -67,7 +66,7 @@ def load_dataset(dataset, args):
     if args.dataset.lower() == 'camvid':
         if 'road_marking' in class_encoding:
             del class_encoding['road_marking']
-            print(f"[INFO] Deleting 'road_marking' class because it is combined with 'road' class")
+            print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
 
     # Get number of classes to predict
     num_classes = len(class_encoding)
@@ -97,7 +96,7 @@ def load_dataset(dataset, args):
         imshow_batch(images, color_labels)
 
     # Get class weights from the selected weighing technique
-    print("\nWeighing technique:", args.weighing)
+    print("Weighing technique:", args.weighing)
     print("Computing class weights...")
     print("(this can take a while depending on the dataset size)")
     class_weights = 0

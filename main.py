@@ -19,13 +19,20 @@ with open(args.config, 'r') as f:
 
 args = utils.merge_args_with_config(args, config)
 
-def train(train_loader, val_loader, class_weights, class_encoding):
-    print("\nTraining...\n")
+def train(train_loader, val_loader, class_weights, class_encoding, args):
+    print(f"\nCreating model: {args.model}...")
 
     num_classes = len(class_encoding)
 
-    # Intialize ENet
-    model = Create_ENet(num_classes).to(args.device)
+    # Intialize model
+    if args.model == 'enet':
+        model = Create_ENet(num_classes).to(args.device)
+    elif args.model == 'deeplabv3':
+        model = Create_DeepLabV3(num_classes, pretrained=False).to(args.device)
+    elif args.model == 'deeplabv3_pretrained':
+        model = Create_DeepLabV3(num_classes, pretrained=True).to(args.device)
+    else:
+        raise TypeError('Invalid model name. Available models are enet, deeplabv3, deeplabv3_pretrained')
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
@@ -64,19 +71,19 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     train = loops.Train(model, train_loader, optimizer, criterion, metric_iou, metric_pa, args.device)
     val = loops.Test(model, val_loader, criterion, metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
-        print("[TRAINING]Epoch: {0:d}".format(epoch + 1))
+        print("Epoch: {0:d}".format(epoch + 1))
 
         epoch_loss, (iou, miou), (pa, mpa) = train.run_epoch(args.print_step)
         lr_updater.step()
 
-        print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
+        print("Result epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
 
         if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
-            print("[VALIDATION]Epoch: {0:d}".format(epoch + 1))
+            print("Epoch (validation): {0:d}".format(epoch + 1))
 
             loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
 
-            print("[RESULT]Epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
+            print("Result epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
 
             # Print per class IoU on last epoch or if best iou
             if epoch + 1 == args.epochs or miou > best_miou:
@@ -94,7 +101,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 
 
 def test(model, test_loader, class_weights, class_encoding):
-    print("\nTesting...\n")
+    print("\nStart testing...")
 
     num_classes = len(class_encoding)
 
@@ -114,13 +121,13 @@ def test(model, test_loader, class_weights, class_encoding):
     # Test the trained model on the test set
     test = loops.Test(model, test_loader, criterion, metric_iou, metric_pa, args.device)
 
-    print("[TEST]Running test dataset")
+    print("Running test dataset...")
 
     loss, (iou, miou), (pa, mpa) = test.run_epoch(args.print_step)
     class_iou = dict(zip(class_encoding.keys(), iou))
     class_pa = dict(zip(class_encoding.keys(), pa))
 
-    print("[RESULT]Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
+    print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
 
     # Print per class IoU
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
@@ -154,7 +161,6 @@ def predict(model, images, class_encoding):
 
 # Run only if this module is being run directly
 if __name__ == '__main__':
-
     # Fail fast if the dataset directory doesn't exist
     assert os.path.isdir(
         args.dataset_dir), "The directory \"{0}\" doesn't exist.".format(
@@ -196,10 +202,6 @@ if __name__ == '__main__':
         model = utils.load_checkpoint(model, optimizer, args.save_dir,
                                       args.name)[0]
 
-        if args.mode.lower() == 'test':
-            # print(model)
-            print(f"[Info] Model loaded succesfully")
-
         test(model, test_loader, w_class, class_encoding)
 
-# to do => PA: nan
+# to do => coba deeplab

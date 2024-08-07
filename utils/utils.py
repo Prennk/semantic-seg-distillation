@@ -114,8 +114,9 @@ def load_checkpoint(model, optimizer, folder_dir, filename):
     model_path = os.path.join(folder_dir, filename)
     assert os.path.isfile(
         model_path), "The model file \"{0}\" doesn't exist.".format(filename)
-
+    
     # Load the stored model parameters to the model instance
+    print(f'Loading model from {folder_dir} + {filename}...')
     checkpoint = torch.load(model_path)
     model.model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
@@ -125,6 +126,12 @@ def load_checkpoint(model, optimizer, folder_dir, filename):
         mpa = checkpoint['mpa']
     else:
         mpa = 0.0
+    print(f"Model: {model}")
+    print(f"Optimizer: {optimizer}")
+    print(f"Epoch: {epoch}")
+    print(f"mIOU: {miou}")
+    print(f"mPA: {mpa}")
+    print('Model loaded successfully')
 
     return model, optimizer, epoch, miou, mpa
 
