@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+from collections import OrderedDict
 
 class Train:
     """Performs the training of ``model`` given a training dataset data
@@ -47,6 +48,9 @@ class Train:
 
             # Forward propagation
             outputs = self.model(inputs)
+
+            if type(outputs) == OrderedDict:
+                outputs = outputs['out']
 
             # Loss computation
             loss = self.criterion(outputs, labels)
