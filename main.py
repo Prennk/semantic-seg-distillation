@@ -19,12 +19,14 @@ with open(args.config, 'r') as f:
 
 args = utils.merge_args_with_config(args, config)
 
-print("-" * 40)
-print("Config")
-print("-" * 40)
+print("-" * 70)
+print("| Config" + " " * 62 + "|")
+print("-" * 70)
 for key, value in vars(args).items():
-    print(f"{key}: {value}")
-print("-" * 40)
+    print(f"| {key}: {value}" + " " * (68 - len(f"{key}: {value}")) + "|")
+print("-" * 70)
+print()
+
 
 def train(train_loader, val_loader, class_weights, class_encoding, args):
     num_classes = len(class_encoding)
