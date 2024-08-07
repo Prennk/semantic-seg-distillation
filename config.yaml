@@ -1,5 +1,5 @@
 mode: train # train => train and test | inference => just test
-model: enet # enet / deeplabv3 / deeplabv3_pretrained
+model: deeplabv3 # enet / deeplabv3 / deeplabv3_pretrained
 resume: false # resume train from checkpoint
 
 # hyperparameter
