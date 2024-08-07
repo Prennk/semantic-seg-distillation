@@ -639,6 +639,7 @@ class Create_ENet(nn.Module):
         self._register_hooks()
 
     def forward(self, x):
+        print(f"\nCreating model: ENet...")
         output = self.model(x)
 
         return output

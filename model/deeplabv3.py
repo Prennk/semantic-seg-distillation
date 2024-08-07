@@ -35,6 +35,7 @@ class Create_DeepLabV3(nn.Module):
                     param.requires_grad = True
 
     def forward(self, x):
+        print(f"\nCreating model: DeepLabV3...")
         output = self.model(x)
 
         return output

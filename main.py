@@ -19,9 +19,14 @@ with open(args.config, 'r') as f:
 
 args = utils.merge_args_with_config(args, config)
 
-def train(train_loader, val_loader, class_weights, class_encoding, args):
-    print(f"\nCreating model: {args.model}...")
+print("-" * 40)
+print("Config")
+print("-" * 40)
+for key, value in vars(args).items():
+    print(f"{key}: {value}")
+print("-" * 40)
 
+def train(train_loader, val_loader, class_weights, class_encoding, args):
     num_classes = len(class_encoding)
 
     # Intialize model
