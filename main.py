@@ -186,7 +186,7 @@ if __name__ == '__main__':
     train_loader, val_loader, test_loader = loaders
 
     if args.mode.lower() in {'train', 'full'}:
-        model = train(train_loader, val_loader, w_class, class_encoding)
+        model = train(train_loader, val_loader, w_class, class_encoding, args)
 
     if args.mode.lower() in {'test', 'full'}:
         if args.mode.lower() == 'test':
