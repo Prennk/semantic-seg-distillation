@@ -29,6 +29,8 @@ print()
 
 
 def train(train_loader, val_loader, class_weights, class_encoding, args):
+    print(f"\nCreating model: {args.model}")
+
     num_classes = len(class_encoding)
 
     # Intialize model
