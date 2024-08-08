@@ -205,7 +205,7 @@ def predict(model, images, class_encoding, epoch):
     # send visualization to wandb
     wandb.log({
         "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
-    }, step=epoch)
+    }, step=epoch + 1)
 
 
 # Run only if this module is being run directly
@@ -252,3 +252,5 @@ if __name__ == '__main__':
                                       args.name)[0]
 
         test(model, test_loader, w_class, class_encoding)
+
+# to do: seed

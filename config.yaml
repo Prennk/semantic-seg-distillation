@@ -1,10 +1,11 @@
-mode: train # train => train and test | inference => just test
+mode: train # train => train and val/test | test => just test (inference)
 model: deeplabv3 # enet / deeplabv3
 resume: false # resume train from checkpoint
+seed: 1
 
 # deeplabv3 settings
 pretrained: true
-freeze: layer
+freeze: block # layer / block / None
 
 # hyperparameter
 batch_size: 10

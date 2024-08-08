@@ -7,31 +7,27 @@ class Create_DeepLabV3(nn.Module):
         weights = seg_model.DeepLabV3_ResNet50_Weights.DEFAULT if pretrained else None
         self.model = seg_model.deeplabv3_resnet50(weights=weights, aux_loss=True)
         self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
-        self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
+        self.model.aux_classifier = None
         self.feature_maps = {}
         self.layers_to_hook = layers_to_hook or []
         self._register_hooks()
 
         if pretrained and freeze:
             if freeze == "block":
-                # freeze model except classifier and aux_classifier
+                # freeze model except classifier
                 print(f"Freezing backbone...")
-                print(f"Trainable: classifier and aux_classifier blocks")
+                print(f"Trainable: classifier blocks")
                 for param in self.model.parameters():
                     param.requires_grad = False
                 for param in self.model.classifier.parameters():
                     param.requires_grad = True
-                for param in self.model.aux_classifier.parameters():
-                    param.requires_grad = True
             elif freeze == "layer":
-                # freeze model except lsat classifier and aux_classifier layers
+                # freeze model except lsat classifier layers
                 print(f"Freezing backbone...")
-                print(f"Trainable: last classifier and aux_classifier layers")
+                print(f"Trainable: last classifier layers")
                 for param in self.model.parameters():
                     param.requires_grad = False
                 for param in self.model.classifier[4].parameters():
-                    param.requires_grad = True
-                for param in self.model.aux_classifier[4].parameters():
                     param.requires_grad = True
 
     def forward(self, x):
