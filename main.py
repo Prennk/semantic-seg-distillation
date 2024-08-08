@@ -132,10 +132,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
-            seg_map = predict(model, images[:1], class_encoding)
-            wandb.log({
-                'val_seg_map': [wandb.Image(seg_map[0], caption="segmentation map")]
-            })
+            predict(model, images[:1], class_encoding)
 
     return model
 
