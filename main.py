@@ -5,6 +5,8 @@ from torchvision import transforms
 import yaml
 from argparse import ArgumentParser
 import os
+import numpy as np
+import random
 import wandb
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
@@ -33,6 +35,15 @@ for key, value in vars(args).items():
     print(f"| {key}: {value}" + " " * (67 - len(f"{key}: {value}")) + "|")
 print("-" * 70)
 print()
+
+# seed everything
+torch.manual_seed(args.seed)
+np.random.seed(args.seed)
+torch.cuda.manual_seed(args.seed)
+torch.cuda.manual_seed_all(args.seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(args.seed)
 
 
 def train(train_loader, val_loader, class_weights, class_encoding, args):
@@ -210,6 +221,15 @@ def predict(model, images, class_encoding, epoch):
 
 # Run only if this module is being run directly
 if __name__ == '__main__':
+    # seed everything
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
     # Fail fast if the dataset directory doesn't exist
     assert os.path.isdir(
         args.dataset_dir), "The directory \"{0}\" doesn't exist.".format(
