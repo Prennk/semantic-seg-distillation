@@ -5,20 +5,27 @@ from torchvision import transforms
 import yaml
 from argparse import ArgumentParser
 import os
+import wandb
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
 from model.deeplabv3 import Create_DeepLabV3
 
+# init wandb
+wandb.init(project='SemSeg-Distill')
+
+# get config from config.yaml
 parser = ArgumentParser()
 parser.add_argument('--config', type=str, default='config.yaml', help='Path to the config file')
 args = parser.parse_args()
-
 with open(args.config, 'r') as f:
     config = yaml.safe_load(f)
-
 args = utils.merge_args_with_config(args, config)
 
+# save config to wandb
+wandb.config.update(args)
+
+# print config from config.yaml
 print("-" * 70)
 print("| Config" + " " * 61 + "|")
 print("-" * 70)
@@ -40,6 +47,9 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         model = Create_DeepLabV3(num_classes, pretrained=args.pretrained, freeze=args.freeze).to(args.device)
     else:
         raise TypeError('Invalid model name. Available models are enet and deeplabv3')
+    
+    # send model to wandb
+    wandb.watch(model, log="all")
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
@@ -85,17 +95,33 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
         print("Result epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
 
+        # send train metric results to wandb
+        wandb.log({
+            "epoch": epoch + 1,
+            "train_loss": epoch_loss,
+            "train_miou": miou,
+            "train_mpa": mpa
+            })
+
         if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
-            print("Epoch (validation): {0:d}".format(epoch + 1))
+            print("Epoch : {0:d} - Validating...".format(epoch + 1))
 
             loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
 
             print("Result epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
 
+            # send val metric results to wandb
+            wandb.log({
+                "epoch": epoch + 1,
+                "val_loss": loss,
+                "val_miou": miou,
+                "val_mpa": mpa
+                })
+
             # Print per class IoU on last epoch or if best iou
             if epoch + 1 == args.epochs or miou > best_miou:
                 for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-                    print("{:<10} => IoU: {:>5.4f} | PA: {:>5.4f}".format(key, class_iou, class_pa))
+                    print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
             if miou > best_miou:
@@ -103,6 +129,13 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
                 best_miou = miou
                 best_mpa = mpa
                 utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
+
+            # predict the segmentation map and send it to wandb
+            images, _ = next(iter(val_loader))
+            seg_map = predict(model, images[:1], class_encoding)
+            wandb.log({
+                'val_seg_map': [wandb.Image(seg_map[0], caption="segmentation map")]
+            })
 
     return model
 
@@ -136,9 +169,16 @@ def test(model, test_loader, class_weights, class_encoding):
 
     print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
 
+    # send val metric results to wandb
+    wandb.log({
+        "test_loss": loss,
+        "test_miou": miou,
+        "test_mpa": mpa
+        })
+
     # Print per class IoU
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-        print("{:<10} => IoU: {:>5.4f} | PA: {:>5.4f}".format(key, class_iou, class_pa))
+        print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
     # Show a batch of samples and labels
     if args.imshow_batch:
@@ -165,6 +205,12 @@ def predict(model, images, class_encoding):
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
     utils.imshow_batch(images.data.cpu(), color_predictions)
+
+    # send visualization to wandb
+    wandb.log({
+        "predictions": [wandb.Image(image, caption="prediction") for image in color_predictions]
+    })
+
 
 # Run only if this module is being run directly
 if __name__ == '__main__':
@@ -211,4 +257,4 @@ if __name__ == '__main__':
 
         test(model, test_loader, w_class, class_encoding)
 
-# to do => coba deeplab
+# to do => separate train test metric, wandb, pin memory
