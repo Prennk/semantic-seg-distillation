@@ -97,11 +97,10 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
         # send train metric results to wandb
         wandb.log({
-            "epoch": epoch + 1,
             "train_loss": epoch_loss,
             "train_miou": miou,
             "train_mpa": mpa
-            })
+            }, step=epoch)
 
         if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
             print("Epoch : {0:d} - Validating...".format(epoch + 1))
@@ -112,11 +111,10 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
             # send val metric results to wandb
             wandb.log({
-                "epoch": epoch + 1,
                 "val_loss": loss,
                 "val_miou": miou,
                 "val_mpa": mpa
-                })
+                }, step=epoch)
 
             # Print per class IoU on last epoch or if best iou
             if epoch + 1 == args.epochs or miou > best_miou:
@@ -132,7 +130,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
-            predict(model, images[:1], class_encoding)
+            predict(model, images[:1], class_encoding, epoch)
 
     return model
 
@@ -179,12 +177,13 @@ def test(model, test_loader, class_weights, class_encoding):
 
     # Show a batch of samples and labels
     if args.imshow_batch:
-        print("A batch of predictions from the test set...")
-        images, _ = next(iter(test_loader))
-        predict(model, images, class_encoding)
+        print("[Warning] imshow_batch is deprecated")
+        # print("A batch of predictions from the test set...")
+        # images, _ = next(iter(test_loader))
+        # predict(model, images, class_encoding)
 
 
-def predict(model, images, class_encoding):
+def predict(model, images, class_encoding, epoch):
     images = images.to(args.device)
 
     # Make predictions!
@@ -201,12 +200,12 @@ def predict(model, images, class_encoding):
         transforms.ToTensor()
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
-    utils.imshow_batch(images.data.cpu(), color_predictions)
+    # utils.imshow_batch(images.data.cpu(), color_predictions)
 
     # send visualization to wandb
     wandb.log({
-        "predictions": [wandb.Image(image, caption="prediction") for image in color_predictions]
-    })
+        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
+    }, step=epoch)
 
 
 # Run only if this module is being run directly
@@ -253,5 +252,3 @@ if __name__ == '__main__':
                                       args.name)[0]
 
         test(model, test_loader, w_class, class_encoding)
-
-# to do => separate train test metric, wandb, pin memory
