@@ -19,7 +19,13 @@ class Create_DeepLabV3(nn.Module):
                 print(f"Trainable: classifier & aux_classifier blocks")
                 for param in self.model.parameters():
                     param.requires_grad = False
-                for param in self.model.classifier.parameters():
+                for param in self.model.classifier[1].parameters():
+                    param.requires_grad = True
+                for param in self.model.classifier[2].parameters():
+                    param.requires_grad = True
+                for param in self.model.classifier[3].parameters():
+                    param.requires_grad = True
+                for param in self.model.classifier[4].parameters():
                     param.requires_grad = True
                 for param in self.model.aux_classifier.parameters():
                     param.requires_grad = True
