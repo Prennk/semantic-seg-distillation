@@ -6,8 +6,23 @@ class Create_DeepLabV3(nn.Module):
         super(Create_DeepLabV3, self).__init__()
         weights = seg_model.DeepLabV3_ResNet50_Weights.DEFAULT if pretrained else None
         self.model = seg_model.deeplabv3_resnet50(weights=weights, aux_loss=True, weights_backbone=None)
-        self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
-        self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
+
+        self.model.classifier = nn.Sequential(
+            self.model.classifier[0],  # ASPP
+            self.model.classifier[1],  # Conv2d
+            self.model.classifier[2],  # BatchNorm2d
+            self.model.classifier[3],  # ReLU
+            nn.Dropout(p=0.5),         # Dropout
+            nn.Conv2d(256, num_classes, kernel_size=1)  # Conv2d for classification
+        )
+        self.model.aux_classifier = nn.Sequential(
+            self.model.aux_classifier[0],  # Conv2d
+            self.model.aux_classifier[1],  # BatchNorm2d
+            self.model.aux_classifier[2],  # ReLU
+            nn.Dropout(p=0.5),             # Dropout
+            nn.Conv2d(256, num_classes, kernel_size=1)  # Conv2d for classification
+        )
+
         self.feature_maps = {}
         self.layers_to_hook = layers_to_hook or []
         self._register_hooks()
@@ -19,13 +34,7 @@ class Create_DeepLabV3(nn.Module):
                 print(f"Trainable: classifier & aux_classifier blocks")
                 for param in self.model.parameters():
                     param.requires_grad = False
-                for param in self.model.classifier[1].parameters():
-                    param.requires_grad = True
-                for param in self.model.classifier[2].parameters():
-                    param.requires_grad = True
-                for param in self.model.classifier[3].parameters():
-                    param.requires_grad = True
-                for param in self.model.classifier[4].parameters():
+                for param in self.model.classifier[1:].parameters():
                     param.requires_grad = True
                 for param in self.model.aux_classifier.parameters():
                     param.requires_grad = True
