@@ -16,7 +16,7 @@ class Create_DeepLabV3(nn.Module):
             if freeze == "block":
                 # freeze model except classifier and aux_classifier
                 print(f"Freezing backbone...")
-                print(f"Trainable: classifier blocks")
+                print(f"Trainable: classifier & aux_classifier blocks")
                 for param in self.model.parameters():
                     param.requires_grad = False
                 for param in self.model.classifier.parameters():
@@ -26,7 +26,7 @@ class Create_DeepLabV3(nn.Module):
             elif freeze == "layer":
                 # freeze model except last classifier and aux_classifier layers
                 print(f"Freezing backbone...")
-                print(f"Trainable: last classifier layers")
+                print(f"Trainable: last classifier & last aux_classifier layers")
                 for param in self.model.parameters():
                     param.requires_grad = False
                 for param in self.model.classifier[4].parameters():
