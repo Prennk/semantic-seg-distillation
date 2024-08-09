@@ -8,6 +8,7 @@ import os
 import numpy as np
 import random
 from collections import OrderedDict
+from timeit import default_timer as timer
 import wandb
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
@@ -222,6 +223,8 @@ def predict(model, images, class_encoding, epoch):
 
 # Run only if this module is being run directly
 if __name__ == '__main__':
+    start_time = timer()
+
     # seed everything
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
@@ -274,4 +277,5 @@ if __name__ == '__main__':
 
         test(model, test_loader, w_class, class_encoding)
 
-# to do: seed
+        end_time = timer()
+        print(f"Elapsed time: {end_time-start_time:.3f} seconds")
