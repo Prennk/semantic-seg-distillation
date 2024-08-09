@@ -128,7 +128,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             }, step=epoch)
 
         # Print per class IoU on last epoch or if best iou
-        if (epoch + 1) % 10 == 0 or miou > best_miou:
+        if (epoch + 1) % 10 == 0 and miou > best_miou:
             for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
                 print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
