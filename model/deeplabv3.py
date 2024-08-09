@@ -24,7 +24,7 @@ class Create_DeepLabV3(nn.Module):
                 for param in self.model.aux_classifier.parameters():
                     param.requires_grad = True
             elif freeze == "layer":
-                # freeze model except lsat classifier and aux_classifier layers
+                # freeze model except last classifier and aux_classifier layers
                 print(f"Freezing backbone...")
                 print(f"Trainable: last classifier layers")
                 for param in self.model.parameters():
