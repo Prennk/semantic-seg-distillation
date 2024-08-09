@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 import os
 import numpy as np
 import random
+from collections import OrderedDict
 import wandb
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
@@ -201,6 +202,8 @@ def predict(model, images, class_encoding, epoch):
     model.eval()
     with torch.no_grad():
         predictions = model(images)
+        if predictions == OrderedDict:
+            predictions = predictions["out"]
 
     # Predictions is one-hot encoded with "num_classes" channels.
     # Convert it to a single int using the indices where the maximum (1) occurs
