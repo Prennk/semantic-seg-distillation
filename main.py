@@ -202,7 +202,7 @@ def predict(model, images, class_encoding, epoch):
     model.eval()
     with torch.no_grad():
         predictions = model(images)
-        if predictions == OrderedDict:
+        if type(predictions) == OrderedDict:
             predictions = predictions["out"]
 
     # Predictions is one-hot encoded with "num_classes" channels.
