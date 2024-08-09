@@ -61,7 +61,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         raise TypeError('Invalid model name. Available models are enet and deeplabv3')
     
     # send model to wandb
-    wandb.watch(model, log="all")
+    # wandb.watch(model, log="all")
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
