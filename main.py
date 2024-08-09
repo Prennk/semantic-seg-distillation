@@ -104,14 +104,17 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
         epoch_loss, (iou, miou), (pa, mpa) = train.run_epoch(args.print_step)
         lr_updater.step()
+        last_lr = lr_updater.get_last_lr()
 
-        print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
+        print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4}"\
+              .format(epoch + 1, epoch_loss, miou, mpa, last_lr))
 
         # send train metric results to wandb
         wandb.log({
             "train_loss": epoch_loss,
             "train_miou": miou,
-            "train_mpa": mpa
+            "train_mpa": mpa,
+            "lr": last_lr
             }, step=epoch)
 
         loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
