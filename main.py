@@ -105,7 +105,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         epoch_loss, (iou, miou), (pa, mpa) = train.run_epoch(args.print_step)
         lr_updater.step()
 
-        print("Result epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
+        print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, epoch_loss, miou, mpa))
 
         # send train metric results to wandb
         wandb.log({
@@ -114,24 +114,20 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             "train_mpa": mpa
             }, step=epoch)
 
-        if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
-            print("Epoch : {0:d} - Validating...".format(epoch + 1))
+        loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
+        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
 
-            loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
+        # send val metric results to wandb
+        wandb.log({
+            "val_loss": loss,
+            "val_miou": miou,
+            "val_mpa": mpa
+            }, step=epoch)
 
-            print("Result epoch: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
-
-            # send val metric results to wandb
-            wandb.log({
-                "val_loss": loss,
-                "val_miou": miou,
-                "val_mpa": mpa
-                }, step=epoch)
-
-            # Print per class IoU on last epoch or if best iou
-            if epoch + 1 == args.epochs or miou > best_miou:
-                for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-                    print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
+        # Print per class IoU on last epoch or if best iou
+        if (epoch + 1) % 10 == 0 or miou > best_miou:
+            for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
+                print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
             if miou > best_miou:
