@@ -127,7 +127,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
-              .format(epoch + 1, loss, miou, mpa))
+              .format(epoch + 1, loss, miou, mpa, test_time))
 
         # send val metric results to wandb
         wandb.log({
