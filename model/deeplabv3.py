@@ -21,21 +21,17 @@ class Create_DeepLabV3(nn.Module):
         if pretrained and freeze:
             # freeze model except classifier
             print(f"Freezing backbone...")
-            print(f"Trainable: DeepLabV3 head => classifier")
+            print(f"Trainable: DeepLabV3 head => ASPP + classifier")
             for param in self.model.backbone.parameters():
-                param.requires_grad = False
-            for param in self.model.classifier[0].parameters():
                 param.requires_grad = False
         elif pretrained and not freeze:
             print("[Warning] Pretrained backbone is trainable")
         elif not pretrained and freeze:
             print("[Warning] You freeze the backbone without using pretrained")
             print(f"Freezing backbone...")
-            print(f"Trainable: DeepLabV3 head => classifier")
+            print(f"Trainable: DeepLabV3 head => ASPP + classifier")
             for param in self.model.backbone.parameters():
-                param.requires_grad = False     
-            for param in self.model.classifier[0].parameters():
-                param.requires_grad = False     
+                param.requires_grad = False    
 
     def forward(self, x):
         output = self.model(x)
