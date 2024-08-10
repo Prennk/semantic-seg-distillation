@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 from collections import OrderedDict
+from timeit import default_timer as timer
 
 class Train:
     """Performs the training of ``model`` given a training dataset data
@@ -37,6 +38,7 @@ class Train:
         - The epoch loss (float).
 
         """
+        start_time = timer()
         self.model.train()
         epoch_loss = 0.0
         self.metric_iou.reset()
@@ -67,10 +69,13 @@ class Train:
             self.metric_iou.add(outputs.detach(), labels.detach())
             self.metric_pa.add(outputs.detach(), labels.detach())
 
+            end_time = timer()
+            total_time = end_time - start_time
+
             if iteration_loss:
                 print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
-        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value()
+        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
     
 
 class Test:
@@ -106,6 +111,7 @@ class Test:
         - The epoch loss (float), and the values of the specified metrics
 
         """
+        start_time = timer()
         self.model.eval()
         epoch_loss = 0.0
         self.metric_iou.reset()
@@ -132,7 +138,10 @@ class Test:
             self.metric_iou.add(outputs.detach(), labels.detach())
             self.metric_pa.add(outputs.detach(), labels.detach())
 
+            end_time = timer()
+            total_time = end_time - start_time
+
             if iteration_loss:
                 print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
-        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value()
+        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time

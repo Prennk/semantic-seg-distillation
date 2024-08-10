@@ -110,12 +110,12 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))
 
-        epoch_loss, (iou, miou), (pa, mpa) = train.run_epoch(args.print_step)
+        epoch_loss, (iou, miou), (pa, mpa), train_time = train.run_epoch(args.print_step)
         lr_updater.step()
         last_lr = lr_updater.get_last_lr()
 
-        print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4}"\
-              .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0]))
+        print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
+              .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
         # send train metric results to wandb
         wandb.log({
@@ -124,8 +124,9 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             "train_mpa": mpa,
             }, step=epoch)
 
-        loss, (iou, miou), (pa, mpa) = val.run_epoch(args.print_step)
-        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f}".format(epoch + 1, loss, miou, mpa))
+        loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
+        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
+              .format(epoch + 1, loss, miou, mpa))
 
         # send val metric results to wandb
         wandb.log({
@@ -230,7 +231,7 @@ def predict(model, images, class_encoding, epoch):
 
 # Run only if this module is being run directly
 if __name__ == '__main__':
-    start_time = timer()
+    elapsed_start_time = timer()
 
     # seed everything
     torch.manual_seed(args.seed)
@@ -282,5 +283,5 @@ if __name__ == '__main__':
 
         test(model, test_loader, w_class, class_encoding)
 
-        end_time = timer()
-        print(f"Elapsed time: {end_time-start_time:.3f} seconds")
+        elapsed_end_time = timer()
+        print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
