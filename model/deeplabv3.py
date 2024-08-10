@@ -12,7 +12,16 @@ class Create_DeepLabV3(nn.Module):
             weights=None, 
             aux_loss=False, 
             weights_backbone=weights_backbone)
-        self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
+        self.model.classifier = nn.Sequential(
+            self.model.classifier[0], # ASPP
+            nn.Dropout2d(p=0.7),
+            self.model.classifier[1], # Conv
+            self.model.classifier[2], # BN
+            self.model.classifier[3], # ReLU
+            nn.Dropout2d(p=0.7),
+            nn.Conv2d(256, num_classes, kernel_size=1)
+        )
+        # self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
         
         self.feature_maps = {}
         self.layers_to_hook = layers_to_hook or []

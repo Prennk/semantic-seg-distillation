@@ -288,5 +288,5 @@ if __name__ == '__main__':
 
         test(model, test_loader, w_class, class_encoding)
 
-        elapsed_end_time = timer()
-        print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
+    elapsed_end_time = timer()
+    print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
