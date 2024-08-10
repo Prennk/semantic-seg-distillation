@@ -96,6 +96,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
     # Optionally resume from a checkpoint
     if args.resume:
+        raise ValueError("Resume mechanism is under construction")
         model, optimizer, start_epoch, best_miou, best_mpa = utils.load_checkpoint(
             model, optimizer, args.save_dir, args.name)
         print("Resuming from model: Start epoch = {0} | Best mean IoU = {1:.4f}".format(start_epoch, best_miou))
@@ -103,6 +104,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         start_epoch = 0
         best_miou = 0
         best_mpa = 0
+        best_epoch = 0
 
     # Start Training
     print()
@@ -137,7 +139,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             }, step=epoch)
 
         # Print per class IoU on last epoch or if best iou
-        if (epoch + 1) % 10 == 0 and miou > best_miou:
+        if miou > best_miou:
             for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
                 print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
@@ -146,13 +148,14 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
                 print("\nBest model based on mIoU thus far. Saving...\n")
                 best_miou = miou
                 best_mpa = mpa
+                best_epoch = epoch
                 utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(model, images[:1], class_encoding, epoch)
 
-    return model
+    return model, best_epoch, best_miou
 
 
 def test(model, test_loader, class_weights, class_encoding):
@@ -266,7 +269,8 @@ if __name__ == '__main__':
     train_loader, val_loader, test_loader = loaders
 
     if args.mode.lower() in {'train', 'full'}:
-        model = train(train_loader, val_loader, w_class, class_encoding, args)
+        model, epoch, miou = train(train_loader, val_loader, w_class, class_encoding, args)
+        print(f"Best mIoU: {miou} in epoch {epoch}")
 
     if args.mode.lower() in {'test', 'full'}:
         if args.mode.lower() == 'test':
