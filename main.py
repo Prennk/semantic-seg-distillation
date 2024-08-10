@@ -66,10 +66,11 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     # wandb.watch(model, log="all")
 
     # print model summary
-    summary(model=model,
-            input_data=torch.randn(1, 3, args.width, args.height).to(args.device),
-            col_names=["trainable"],
-            row_settings=["var_names"])
+    model_summary = summary(model=model,
+                            input_data=torch.randn(1, 3, args.width, args.height).to(args.device),
+                            col_names=["trainable"],
+                            row_settings=["var_names"])
+    print(model_summary)
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
