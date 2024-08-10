@@ -10,8 +10,9 @@ class Create_DeepLabV3(nn.Module):
 
         self.model = seg_model.deeplabv3_resnet50(
             weights=weights, 
-            aux_loss=False)
+            aux_loss=True)
         self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
+        self.model.aux_classifier = None
         
         self.feature_maps = {}
         self.layers_to_hook = layers_to_hook or []
