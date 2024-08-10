@@ -4,8 +4,8 @@ resume: false # resume train from checkpoint
 seed: 1
 
 # deeplabv3 settings
-pretrained: true
-freeze: block # layer / block / None
+pretrained: true # pretrained for backbone i.e. ResNet50
+freeze: true # freeze the backbone
 
 # hyperparameter
 batch_size: 10

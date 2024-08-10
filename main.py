@@ -9,6 +9,7 @@ import numpy as np
 import random
 from collections import OrderedDict
 from timeit import default_timer as timer
+from torchinfo import summary
 import wandb
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
@@ -63,6 +64,12 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     
     # send model to wandb
     # wandb.watch(model, log="all")
+
+    # print model summary
+    summary(model=model,
+            input_data=torch.randn(1, 3, args.width, args.height),
+            col_names=["trainable"],
+            row_settings=["var_names"])
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
@@ -231,8 +238,6 @@ if __name__ == '__main__':
     random.seed(args.seed)
     torch.cuda.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
 
     # Fail fast if the dataset directory doesn't exist
     assert os.path.isdir(

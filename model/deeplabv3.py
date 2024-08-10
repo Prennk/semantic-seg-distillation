@@ -1,53 +1,36 @@
 import torch.nn as nn
+from torchvision import models
 import torchvision.models.segmentation as seg_model
 
 class Create_DeepLabV3(nn.Module):
     def __init__(self, num_classes, pretrained=False, freeze=None, layers_to_hook=None):
         super(Create_DeepLabV3, self).__init__()
-        weights = seg_model.DeepLabV3_ResNet50_Weights.DEFAULT if pretrained else None
-        self.model = seg_model.deeplabv3_resnet50(weights=weights, aux_loss=True, weights_backbone=None)
+        # weights = seg_model.DeepLabV3_ResNet50_Weights.DEFAULT if pretrained else None
+        weights_backbone = models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
 
-        self.model.classifier = nn.Sequential(
-            self.model.classifier[0],  # ASPP
-            self.model.classifier[1],  # Conv2d
-            self.model.classifier[2],  # BatchNorm2d
-            self.model.classifier[3],  # ReLU
-            nn.Dropout(p=0.5),         # Dropout
-            nn.Conv2d(256, num_classes, kernel_size=1)  # Conv2d for classification
-        )
-        self.model.aux_classifier = nn.Sequential(
-            self.model.aux_classifier[0],  # Conv2d
-            self.model.aux_classifier[1],  # BatchNorm2d
-            self.model.aux_classifier[2],  # ReLU
-            nn.Dropout(p=0.5),             # Dropout
-            nn.Conv2d(256, num_classes, kernel_size=1)  # Conv2d for classification
-        )
-
+        self.model = seg_model.deeplabv3_resnet50(
+            weights=None, 
+            aux_loss=False, 
+            weights_backbone=weights_backbone)
+        
         self.feature_maps = {}
         self.layers_to_hook = layers_to_hook or []
         self._register_hooks()
 
         if pretrained and freeze:
-            if freeze == "block":
-                # freeze model except classifier and aux_classifier
-                print(f"Freezing backbone...")
-                print(f"Trainable: classifier & aux_classifier blocks")
-                for param in self.model.parameters():
-                    param.requires_grad = False
-                for param in self.model.classifier[1:].parameters():
-                    param.requires_grad = True
-                for param in self.model.aux_classifier.parameters():
-                    param.requires_grad = True
-            elif freeze == "layer":
-                # freeze model except last classifier and aux_classifier layers
-                print(f"Freezing backbone...")
-                print(f"Trainable: last classifier & last aux_classifier layers")
-                for param in self.model.parameters():
-                    param.requires_grad = False
-                for param in self.model.classifier[4].parameters():
-                    param.requires_grad = True
-                for param in self.model.aux_classifier[4].parameters():
-                    param.requires_grad = True                   
+            # freeze model except classifier
+            print(f"Freezing backbone...")
+            print(f"Trainable: DeepLabV3 head => ASPP + classifier")
+            for param in self.model.backbone.parameters():
+                param.requires_grad = False
+        elif pretrained and not freeze:
+            print("[Warning] Pretrained backbone is trainable")
+        elif not pretrained and freeze:
+            print("[Warning] You freeze the backbone without using pretrained")
+            print(f"Freezing backbone...")
+            print(f"Trainable: DeepLabV3 head => ASPP + classifier")
+            for param in self.model.backbone.parameters():
+                param.requires_grad = False          
 
     def forward(self, x):
         output = self.model(x)
