@@ -44,8 +44,6 @@ torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 torch.cuda.manual_seed(args.seed)
 torch.cuda.manual_seed_all(args.seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
 random.seed(args.seed)
 
 
@@ -90,7 +88,9 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         weight_decay=args.weight_decay)
 
     # Learning rate decay scheduler
-    lr_updater = optim.lr_scheduler.StepLR(optimizer, args.lr_decay_epochs, args.lr_decay)
+    # lr_updater = optim.lr_scheduler.StepLR(optimizer, args.lr_decay_epochs, args.lr_decay)
+    lambda_lr = lambda iter: (1 - float(iter) / args.epochs) ** args.lr_decay
+    lr_updater = optim.lr_scheduler.LambdaLR(optimizer, lambda_lr)
 
     # Evaluation metric
     if args.ignore_unlabeled:
