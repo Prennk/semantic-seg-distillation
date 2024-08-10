@@ -78,9 +78,15 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     criterion = nn.CrossEntropyLoss(weight=class_weights)
 
     # ENet authors used Adam as the optimizer
-    optimizer = optim.Adam(
+    # optimizer = optim.Adam(
+    #     model.parameters(),
+    #     lr=args.learning_rate,
+    #     weight_decay=args.weight_decay)
+    
+    optimizer = optim.SGD(
         model.parameters(),
         lr=args.learning_rate,
+        momentum=0.9,
         weight_decay=args.weight_decay)
 
     # Learning rate decay scheduler
@@ -125,7 +131,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             "train_loss": epoch_loss,
             "train_miou": miou,
             "train_mpa": mpa,
-            }, step=epoch)
+            }, step=epoch + 1)
 
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
@@ -136,7 +142,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             "val_loss": loss,
             "val_miou": miou,
             "val_mpa": mpa
-            }, step=epoch)
+            }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
@@ -151,6 +157,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
                 best_epoch = epoch
                 utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
+        if (epoch + 1) % 10 == 0:
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(model, images[:1], class_encoding, epoch)
