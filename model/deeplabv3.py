@@ -5,12 +5,13 @@ import torchvision.models.segmentation as seg_model
 class Create_DeepLabV3(nn.Module):
     def __init__(self, num_classes, pretrained=False, freeze=None, layers_to_hook=None):
         super(Create_DeepLabV3, self).__init__()
-        weights = seg_model.DeepLabV3_ResNet50_Weights.DEFAULT if pretrained else None
-        # weights_backbone = models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
+        # weights = seg_model.DeepLabV3_ResNet50_Weights.DEFAULT if pretrained else None
+        weights_backbone = models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
 
         self.model = seg_model.deeplabv3_resnet50(
-            weights=weights, 
-            aux_loss=True)
+            weights=None, 
+            aux_loss=True,
+            weights_backbone=weights_backbone)
         self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
         self.model.aux_classifier = None
         
