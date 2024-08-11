@@ -17,14 +17,16 @@ class Create_DeepLabV3(nn.Module):
         if args.pretrained == "backbone":
             print("Loading pretrained ResNet50 IMAGENET1K_V2...")
             weights_backbone = models.ResNet50_Weights.IMAGENET1K_V2
+            weights = None
         elif args.pretrained == "all":
             print("Loading pretrained ResNet50 COCO_WITH_VOC_LABELS_V1...")
+            weights_backbone = None
             weights = seg_model.DeepLabV3_ResNet50_Weights.COCO_WITH_VOC_LABELS_V1
         elif not args.pretrained:
             weights_backbone = None
             weights = None
         else:
-            raise ValueError("Unknown pretrained command")
+            raise ValueError(f"Unknown pretrained command: {args.pretrained}")
 
         self.model = seg_model.deeplabv3_resnet50(
                 weights=weights, 
