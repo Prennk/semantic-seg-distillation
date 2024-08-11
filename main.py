@@ -56,7 +56,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     if args.model == 'enet':
         model = Create_ENet(num_classes).to(args.device)
     elif args.model == 'deeplabv3':
-        model = Create_DeepLabV3(num_classes, pretrained=args.pretrained, freeze=args.freeze).to(args.device)
+        model = Create_DeepLabV3(num_classes, args).to(args.device)
     else:
         raise TypeError('Invalid model name. Available models are enet and deeplabv3')
     
