@@ -14,7 +14,8 @@ class Create_DeepLabV3(nn.Module):
                 aux_loss=True,
                 weights_backbone=weights_backbone)
             self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
-            self.model.aux_classifier = None
+            if freeze:
+                self.model.aux_classifier = None
         else:
             self.model = seg_model.deeplabv3_resnet50(
                 weights=None, 
