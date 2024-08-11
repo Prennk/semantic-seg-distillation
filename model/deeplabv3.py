@@ -21,6 +21,7 @@ class Create_DeepLabV3(nn.Module):
                 aux_loss=True,
                 weights_backbone=None)
             self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
+            self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
             
             self.feature_maps = {}
             self.layers_to_hook = layers_to_hook or []
