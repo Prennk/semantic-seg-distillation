@@ -24,7 +24,7 @@ class Create_DeepLabV3(nn.Module):
             print(f"Trainable: DeepLabV3 head => ASPP + classifier")
             for param in self.model.backbone.parameters():
                 param.requires_grad = False
-            for param in self.model.classifier[:-1].parameters():
+            for param in list(self.model.classifier.parameters())[:-1]:
                 param.requires_grad = False
         elif pretrained and not freeze:
             print("[Warning] Pretrained backbone is trainable")
@@ -34,8 +34,8 @@ class Create_DeepLabV3(nn.Module):
             print(f"Trainable: DeepLabV3 head => ASPP + classifier")
             for param in self.model.backbone.parameters():
                 param.requires_grad = False   
-            for param in self.model.classifier[:-1].parameters():
-                param.requires_grad = False 
+            for param in list(self.model.classifier.parameters())[:-1]:
+                param.requires_grad = False
 
     def forward(self, x):
         output = self.model(x)
