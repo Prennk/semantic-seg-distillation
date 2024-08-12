@@ -33,6 +33,9 @@ device: cuda
 name: ENet
 save_dir: save
 
+# teacher path
+teacher_path: deeplabv3_imagenet
+
 # layers to hook
 teacher_layers:
   - model.backbone.layer2
