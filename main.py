@@ -15,6 +15,7 @@ import wandb
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
 from model.deeplabv3 import Create_DeepLabV3
+from distiller.vid import VIDLoss
 
 # init wandb
 wandb.init(project='SemSeg-Distill')
@@ -157,7 +158,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
                 best_epoch = epoch
                 utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
-        if (epoch + 1) % 10 == 0:
+        if epoch + 1 % 10 == 0 or epoch + 1 == args.epochs:
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(model, images[:1], class_encoding, epoch)
@@ -240,6 +241,130 @@ def predict(model, images, class_encoding, epoch):
     }, step=epoch + 1)
 
 
+def distill(train_loader, val_loader, class_weights, class_encoding, args):
+    num_classes = len(class_encoding)
+
+    # create teacher
+    print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")
+    t_model = Create_DeepLabV3(num_classes, args).to(args.device)
+
+    # load pretrained teacher
+    teacher_dict = torch.load(args.teacher_path, map_location=args.device)["state_dict"]
+    t_model.load_state_dict(teacher_dict)
+
+    print(f"Creating student model: enet...")
+    s_model = Create_ENet(num_classes).to(args.device)
+    
+    # send model to wandb
+    # wandb.watch(model, log="all")
+
+    # print layer to distill
+    print(f"\nTeacher layer to distill: \n{args.teacher_layers}")
+    print(f"Student layer to distill: \n{args.student_layers}")
+
+    if len(args.teacher_layers) != len(args.student_layers):
+        raise ValueError("Number of layers to distill in teacher and student models do not match.")
+
+    # get layers size for VID
+    t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
+    s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
+
+    print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
+    print(f"Student layer shapes: {[shape for shape in s_shapes]}")
+
+    vid_criterions = nn.ModuleList([VIDLoss(s_shape, t_shape, t_shape) for s_shape, t_shape in zip(s_shapes, t_shapes)])
+    
+    # We are going to use the CrossEntropyLoss loss function as it's most
+    # frequentely used in classification problems with multiple classes which
+    # fits the problem. This criterion  combines LogSoftMax and NLLLoss.
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    
+    optimizer = optim.SGD(
+        s_model.parameters(),
+        lr=args.learning_rate,
+        momentum=0.9,
+        weight_decay=args.weight_decay)
+    
+    # Learning rate decay scheduler
+    # lr_updater = optim.lr_scheduler.StepLR(optimizer, args.lr_decay_epochs, args.lr_decay)
+    lambda_lr = lambda iter: (1 - float(iter) / args.epochs) ** args.lr_decay
+    lr_updater = optim.lr_scheduler.LambdaLR(optimizer, lambda_lr)
+
+    # Evaluation metric
+    if args.ignore_unlabeled:
+        ignore_index = list(class_encoding).index('unlabeled')
+    else:
+        ignore_index = None
+    metric_iou = metrics.IoU(num_classes, ignore_index=ignore_index)
+    metric_pa = metrics.PixelAccuracy(num_classes, ignore_index=ignore_index)
+
+    # Optionally resume from a checkpoint
+    if args.resume:
+        raise ValueError("Resume mechanism is under construction")
+        model, optimizer, start_epoch, best_miou, best_mpa = utils.load_checkpoint(
+            model, optimizer, args.save_dir, args.name)
+        print("Resuming from model: Start epoch = {0} | Best mean IoU = {1:.4f}".format(start_epoch, best_miou))
+    else:
+        start_epoch = 0
+        best_miou = 0
+        best_mpa = 0
+        best_epoch = 0
+
+    # Start Training
+    print()
+    distill = loops.Distill(
+        t_model, s_model, train_loader, optimizer, criterion, 
+        vid_criterions, metric_iou, metric_pa, args.device)
+    val = loops.Test(s_model, val_loader, criterion, metric_iou, metric_pa, args.device)
+    for epoch in range(start_epoch, args.epochs):
+        print("Epoch: {0:d}".format(epoch + 1))
+
+        epoch_loss, (iou, miou), (pa, mpa), train_time = distill.run_epoch(args.print_step)
+        lr_updater.step()
+        last_lr = lr_updater.get_last_lr()
+
+        print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
+              .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
+
+        # send train metric results to wandb
+        wandb.log({
+            "train_loss": epoch_loss,
+            "train_miou": miou,
+            "train_mpa": mpa,
+            }, step=epoch + 1)
+
+        loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
+        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
+              .format(epoch + 1, loss, miou, mpa, test_time))
+
+        # send val metric results to wandb
+        wandb.log({
+            "val_loss": loss,
+            "val_miou": miou,
+            "val_mpa": mpa
+            }, step=epoch + 1)
+
+        # Print per class IoU on last epoch or if best iou
+        if miou > best_miou:
+            for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
+                print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
+
+            # Save the model if it's the best thus far
+            if miou > best_miou:
+                print("\nBest model based on mIoU thus far. Saving...\n")
+                best_miou = miou
+                best_mpa = mpa
+                best_epoch = epoch
+                utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
+
+        if epoch + 1 % 10 == 0 or epoch + 1 == args.epochs:
+            # predict the segmentation map and send it to wandb
+            images, _ = next(iter(val_loader))
+            predict(s_model, images[:1], class_encoding, epoch)
+
+    return s_model, best_epoch, best_miou
+
+
 # Run only if this module is being run directly
 if __name__ == '__main__':
     elapsed_start_time = timer()
@@ -279,11 +404,15 @@ if __name__ == '__main__':
         model, epoch, miou = train(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch}")
 
+    if args.mode.lower() == "distill":
+        model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
+
     if args.mode.lower() in {'test', 'full'}:
         if args.mode.lower() == 'test':
             # Intialize a new ENet model
             num_classes = len(class_encoding)
             model = Create_ENet(num_classes).to(args.device)
+
 
         # Initialize a optimizer just so we can retrieve the model from the
         # checkpoint

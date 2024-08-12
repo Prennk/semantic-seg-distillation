@@ -1,4 +1,4 @@
-mode: train # train => train and val/test | test => just test (inference)
+mode: train # train / test / distill
 model: deeplabv3 # enet / deeplabv3
 resume: false # resume train from checkpoint
 seed: 1
@@ -32,3 +32,16 @@ device: cuda
 # save settings
 name: ENet
 save_dir: save
+
+# layers to hook
+teacher_layers:
+  - model.backbone.layer2
+  - model.backbone.layer3
+  - model.backbone.layer4
+  - model.classifier.1
+
+student_layers:
+  - model.regular2_4
+  - model.dilated
+  - model.regular4_1
+  - model.regular5_1

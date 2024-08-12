@@ -51,7 +51,7 @@ class Train:
             # Forward propagation
             outputs = self.model(inputs)
 
-            if type(outputs) == OrderedDict:
+            if isinstance(outputs, OrderedDict):
                 outputs = outputs['out']
 
             # Loss computation
@@ -143,5 +143,97 @@ class Test:
 
             if iteration_loss:
                 print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
+
+        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
+
+
+class Distill:
+    """Performs the distillation of from teacher to student model given a training dataset data
+    loader, the optimizer, and the loss criterion.
+
+    Keyword arguments:
+    - t_model (``nn.Module``): the teacher model instance.
+    - s_model (``nn.Module``): the student model instance.
+    - data_loader (``Dataloader``): Provides single or multi-process
+    iterators over the dataset.
+    - optim (``Optimizer``): The optimization algorithm.
+    - criterion (``Optimizer``): The loss criterion.
+    - criterion (``Optimizer``): The distillation loss criterion.
+    - metric (```Metric``): An instance specifying the metric to return.
+    - device (``torch.device``): An object representing the device on which
+    tensors are allocated.
+
+    """
+
+    def __init__(self, t_model, s_model, data_loader, optim, criterion, distill_criterion, metric_iou, metric_pa, device):
+        self.t_model = t_model
+        self.s_model = s_model
+        self.data_loader = data_loader
+        self.optim = optim
+        self.criterion = criterion
+        self.distill_criterion = distill_criterion
+        self.metric_iou = metric_iou
+        self.metric_pa = metric_pa
+        self.device = device
+
+    def run_epoch(self, iteration_loss=False):
+        """Runs an epoch of training."""
+        start_time = timer()
+
+        self.t_model.eval()
+        self.s_model.train()
+
+        epoch_loss = 0.0
+        self.metric_iou.reset()
+        self.metric_pa.reset()
+
+        for step, batch_data in enumerate(tqdm(self.data_loader, desc="Training (distillation)")):
+            # Get the inputs and labels
+            inputs = batch_data[0].to(self.device)
+            labels = batch_data[1].to(self.device)
+
+            # Forward propagation for teacher
+            with torch.inference_mode():
+                t_outputs = self.t_model(inputs)
+                if isinstance(t_outputs, OrderedDict):
+                    t_outputs = t_outputs['out']
+
+            # Forward propagation for student
+            s_outputs = self.s_model(inputs)
+            if isinstance(s_outputs, OrderedDict):
+                s_outputs = s_outputs['out']
+
+            # Loss computation
+            loss = self.criterion(s_outputs, labels)
+
+            # Reset distill_loss for each batch
+            distill_loss = 0.0
+
+            # Distill loss
+            for t_layer, s_layer in zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook):
+                t_features = self.t_model.get_feature_map(t_layer)
+                s_features = self.s_model.get_feature_map(s_layer)
+                distill_loss += self.distill_criterion(s_features, t_features)
+
+            # Total loss
+            total_loss = loss + distill_loss
+
+            # Backpropagation
+            self.optim.zero_grad()
+            total_loss.backward()
+            self.optim.step()
+
+            # Keep track of loss for current epoch
+            epoch_loss += total_loss.item()
+
+            # Keep track of the evaluation metric
+            self.metric_iou.add(s_outputs.detach(), labels.detach())
+            self.metric_pa.add(s_outputs.detach(), labels.detach()) 
+
+            if iteration_loss:
+                print("[Step: %d] Iteration loss: %.4f" % (step, total_loss.item()))
+
+        end_time = timer()
+        total_time = end_time - start_time
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
