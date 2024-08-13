@@ -216,6 +216,8 @@ class Distill:
                 s_features = self.s_model.get_feature_map(s_layer)
                 distill_loss += self.distill_criterion[idx](s_features, t_features)
 
+            distill_loss += self.distill_criterion[-1](s_outputs, t_outputs)
+
             # Total loss
             total_loss = loss + distill_loss
 
