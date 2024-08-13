@@ -210,6 +210,7 @@ class Distill:
             distill_loss = 0.0
 
             # Distill loss
+            self.distill_criterion.to(self.device)
             for idx, (t_layer, s_layer) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
                 t_features = self.t_model.get_feature_map(t_layer)
                 s_features = self.s_model.get_feature_map(s_layer)
