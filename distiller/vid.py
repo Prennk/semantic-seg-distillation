@@ -47,11 +47,6 @@ class VIDLoss(nn.Module):
         pred_mean = self.regressor(input)
         pred_var = torch.log(1.0+torch.exp(self.log_scale))+self.eps
         pred_var = pred_var.view(1, -1, 1, 1)
-
-        print(f"pred_mean shape: {pred_mean.shape}")
-        print(f"target shape: {target.shape}")
-        print(f"pred_var shape: {pred_var.shape}\n")
-
         neg_log_prob = 0.5*(
             (pred_mean-target)**2/pred_var+torch.log(pred_var)
             )
