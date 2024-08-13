@@ -18,7 +18,7 @@ args = merge_args_with_config(args, config)
 def show_summary(model):
     print(summary(model=model,
             input_size=(1, 3, args.width, args.height),
-            col_names=["input_size", "output_size", "num_params", "kernel_size", "mult_adds"],
+            col_names=["input_size", "output_size", "num_params"],
             col_width=20,
             device=args.device,
             row_settings=["var_names"]))
