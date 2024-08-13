@@ -35,7 +35,7 @@ class Create_DeepLabV3(nn.Module):
         self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
 
-        if args.pretrained and args.freeze:
+        if args.pretrained and args.freeze and not args.mode == "distill":
             # freeze deeplabv3 backbone
             print(f"Freezing backbone...")
             print(f"Trainable: DeepLabV3 head => ASPP + classifier")
