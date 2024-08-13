@@ -10,7 +10,7 @@ import random
 from collections import OrderedDict
 from timeit import default_timer as timer
 from torchinfo import summary
-import wandb
+# import wandb
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
@@ -18,7 +18,7 @@ from model.deeplabv3 import Create_DeepLabV3
 from distiller.vid import VIDLoss
 
 # init wandb
-wandb.init(project='SemSeg-Distill')
+# wandb.init(project='SemSeg-Distill')
 
 # get config from config.yaml
 parser = ArgumentParser()
@@ -29,7 +29,7 @@ with open(args.config, 'r') as f:
 args = utils.merge_args_with_config(args, config)
 
 # save config to wandb
-wandb.config.update(args)
+# wandb.config.update(args)
 
 # print config from config.yaml
 print("-" * 70)
@@ -128,22 +128,22 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
         # send train metric results to wandb
-        wandb.log({
-            "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
-            }, step=epoch + 1)
+        # wandb.log({
+        #     "train_loss": epoch_loss,
+        #     "train_miou": miou,
+        #     "train_mpa": mpa,
+        #     }, step=epoch + 1)
 
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
 
         # send val metric results to wandb
-        wandb.log({
-            "val_loss": loss,
-            "val_miou": miou,
-            "val_mpa": mpa
-            }, step=epoch + 1)
+        # wandb.log({
+        #     "val_loss": loss,
+        #     "val_miou": miou,
+        #     "val_mpa": mpa
+        #     }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
@@ -196,11 +196,11 @@ def test(model, test_loader, class_weights, class_encoding):
     print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
 
     # send val metric results to wandb
-    wandb.log({
-        "test_loss": loss,
-        "test_miou": miou,
-        "test_mpa": mpa
-        })
+    # wandb.log({
+    #     "test_loss": loss,
+    #     "test_miou": miou,
+    #     "test_mpa": mpa
+    #     })
 
     # Print per class IoU
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
@@ -236,9 +236,9 @@ def predict(model, images, class_encoding, epoch):
     # utils.imshow_batch(images.data.cpu(), color_predictions)
 
     # send visualization to wandb
-    wandb.log({
-        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
-    }, step=epoch + 1)
+    # wandb.log({
+    #     "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
+    # }, step=epoch + 1)
 
 
 def distill(train_loader, val_loader, class_weights, class_encoding, args):
@@ -327,22 +327,22 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
         # send train metric results to wandb
-        wandb.log({
-            "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
-            }, step=epoch + 1)
+        # wandb.log({
+        #     "train_loss": epoch_loss,
+        #     "train_miou": miou,
+        #     "train_mpa": mpa,
+        #     }, step=epoch + 1)
 
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
 
         # send val metric results to wandb
-        wandb.log({
-            "val_loss": loss,
-            "val_miou": miou,
-            "val_mpa": mpa
-            }, step=epoch + 1)
+        # wandb.log({
+        #     "val_loss": loss,
+        #     "val_miou": miou,
+        #     "val_mpa": mpa
+        #     }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
