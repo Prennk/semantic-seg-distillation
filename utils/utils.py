@@ -141,23 +141,3 @@ def merge_args_with_config(args, config):
             setattr(args, key, value)
     return args
 
-def get_layer_output_shapes(model, layer_names, args):
-    """Helper function to get the output shapes of specified layers."""
-    output_shapes = []
-    dummy_tensor = torch.randn(1, 3, args.width, args.height)
-    
-    def hook(module, input, output):
-        output_shapes.append(output.shape)
-    
-    hooks = []
-    for name in layer_names:
-        layer = dict(model.named_modules())[name]
-        hooks.append(layer.register_forward_hook(hook))
-    
-    with torch.no_grad():
-        model(dummy_tensor)
-    
-    for hook in hooks:
-        hook.remove()
-    
-    return output_shapes

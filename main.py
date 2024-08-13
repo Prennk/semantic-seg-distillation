@@ -266,6 +266,12 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         raise ValueError("Number of layers to distill in teacher and student models do not match.")
 
     # get layers size for VID
+    x = torch.randn(1, 3, args.width, args.height)
+    t_model.eval()
+    t_y = t_model(x)
+    s_model.eval()
+    s_y = s_model(x)
+    
     t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
     s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
 
