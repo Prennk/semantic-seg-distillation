@@ -22,7 +22,7 @@ def show_summary(model):
             col_width=20,
             device=args.device,
             row_settings=["var_names"],
-            verbose=2)
+            verbose=1)
 
 if __name__ == "__main__":
     if args.model == "deeplabv3":
