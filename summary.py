@@ -1,0 +1,32 @@
+import torch
+from torchinfo import summary
+from model.deeplabv3 import Create_DeepLabV3
+from model.enet import Create_ENet
+from utils.utils import merge_args_with_config
+
+import yaml
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument("--model", type=str)
+parser.add_argument("--config", type=str, default="config.yaml")
+args = parser.parse_args()
+with open(args.config, "r") as f:
+    config = yaml.safe_load(f)
+args = merge_args_with_config(args, config)
+
+if __name__ == "__main__":
+    if args.model == "deeplabv3":
+        model = Create_DeepLabV3(11, args)
+    elif args.model == "enet":
+        model = Create_ENet(11)
+    else:
+        raise ValueError("Unknown model")
+
+    summary(model=model,
+            input_size=(1, 3, args.width, args.height),
+            col_names=["input_size", "output_size", "num_params", "param_percent", "kernel_size", "mult_adds", "trainable"],
+            col_width=40,
+            device=args.device,
+            row_settings=["var_names"],
+            verbose=2)
