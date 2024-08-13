@@ -15,14 +15,7 @@ with open(args.config, "r") as f:
     config = yaml.safe_load(f)
 args = merge_args_with_config(args, config)
 
-if __name__ == "__main__":
-    if args.model == "deeplabv3":
-        model = Create_DeepLabV3(11, args)
-    elif args.model == "enet":
-        model = Create_ENet(11)
-    else:
-        raise ValueError("Unknown model")
-
+def show_summary(model):
     summary(model=model,
             input_size=(1, 3, args.width, args.height),
             col_names=["input_size", "output_size", "num_params", "param_percent", "kernel_size", "mult_adds", "trainable"],
@@ -30,3 +23,19 @@ if __name__ == "__main__":
             device=args.device,
             row_settings=["var_names"],
             verbose=2)
+
+if __name__ == "__main__":
+    if args.model == "deeplabv3":
+        model = Create_DeepLabV3(11, args)
+        show_summary(model)
+    elif args.model == "enet":
+        model = Create_ENet(11)
+        show_summary(model)
+    elif args.model == "all":
+        model = Create_DeepLabV3(11, args)
+        show_summary(model)
+
+        model = Create_ENet(11)
+        show_summary(model)
+    else:
+        raise ValueError("Unknown model")
