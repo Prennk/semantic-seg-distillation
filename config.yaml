@@ -38,13 +38,13 @@ teacher_path: deeplabv3_imagenet
 
 # layers to hook
 teacher_layers:
-  - model.backbone.layer2
-  - model.backbone.layer3
-  - model.backbone.layer4
-  - model.classifier.1
+  - backbone.layer2
+  - backbone.layer3
+  - backbone.layer4
+  - classifier.1
 
 student_layers:
-  - model.regular2_4
-  - model.dilated
-  - model.regular4_1
-  - model.regular5_1
+  - regular2_4
+  - dilated
+  - regular4_1
+  - regular5_1
