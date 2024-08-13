@@ -21,8 +21,7 @@ def show_summary(model):
             col_names=["input_size", "output_size", "num_params", "kernel_size", "mult_adds"],
             col_width=20,
             device=args.device,
-            row_settings=["var_names"],
-            verbose=1)
+            row_settings=["var_names"])
 
 if __name__ == "__main__":
     if args.model == "deeplabv3":
