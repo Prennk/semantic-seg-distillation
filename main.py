@@ -148,12 +148,11 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
                 print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
-            if miou > best_miou:
-                print("\nBest model based on mIoU thus far. Saving...\n")
-                best_miou = miou
-                best_mpa = mpa
-                best_epoch = epoch
-                utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
+            print("\nBest model based on mIoU thus far. Saving...\n")
+            best_miou = miou
+            best_mpa = mpa
+            best_epoch = epoch
+            utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
         if epoch + 1 % 10 == 0 or epoch + 1 == args.epochs:
             # predict the segmentation map and send it to wandb
@@ -209,33 +208,6 @@ def test(model, test_loader, class_weights, class_encoding):
         # print("A batch of predictions from the test set...")
         # images, _ = next(iter(test_loader))
         # predict(model, images, class_encoding)
-
-
-def predict(model, images, class_encoding, epoch):
-    images = images.to(args.device)
-
-    # Make predictions!
-    model.eval()
-    with torch.no_grad():
-        predictions = model(images)
-        if type(predictions) == OrderedDict:
-            predictions = predictions["out"]
-
-    # Predictions is one-hot encoded with "num_classes" channels.
-    # Convert it to a single int using the indices where the maximum (1) occurs
-    _, predictions = torch.max(predictions.data, 1)
-
-    label_to_rgb = transforms.Compose([
-        ext_transforms.LongTensorToRGBPIL(class_encoding),
-        transforms.ToTensor()
-    ])
-    color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
-    # utils.imshow_batch(images.data.cpu(), color_predictions)
-
-    # send visualization to wandb
-    wandb.log({
-        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
-    }, step=epoch + 1)
 
 
 def distill(train_loader, val_loader, class_weights, class_encoding, args):
@@ -352,12 +324,11 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
                 print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
-            if miou > best_miou:
-                print("\nBest model based on mIoU thus far. Saving...\n")
-                best_miou = miou
-                best_mpa = mpa
-                best_epoch = epoch
-                utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
+            print("\nBest model based on mIoU thus far. Saving...\n")
+            best_miou = miou
+            best_mpa = mpa
+            best_epoch = epoch
+            utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
         if epoch + 1 % 10 == 0 or epoch + 1 == args.epochs:
             # predict the segmentation map and send it to wandb
@@ -365,6 +336,33 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
             predict(s_model, images[:1], class_encoding, epoch)
 
     return s_model, best_epoch, best_miou
+
+
+def predict(model, images, class_encoding, epoch):
+    images = images.to(args.device)
+
+    # Make predictions!
+    model.eval()
+    with torch.no_grad():
+        predictions = model(images)
+        if type(predictions) == OrderedDict:
+            predictions = predictions["out"]
+
+    # Predictions is one-hot encoded with "num_classes" channels.
+    # Convert it to a single int using the indices where the maximum (1) occurs
+    _, predictions = torch.max(predictions.data, 1)
+
+    label_to_rgb = transforms.Compose([
+        ext_transforms.LongTensorToRGBPIL(class_encoding),
+        transforms.ToTensor()
+    ])
+    color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
+    # utils.imshow_batch(images.data.cpu(), color_predictions)
+
+    # send visualization to wandb
+    wandb.log({
+        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
+    }, step=epoch + 1)
 
 
 # Run only if this module is being run directly
@@ -408,6 +406,7 @@ if __name__ == '__main__':
 
     if args.mode.lower() == "distill":
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
+        print(f"Best mIoU: {miou} in epoch {epoch}")
 
     if args.mode.lower() in {'test', 'full'}:
         if args.mode.lower() == 'test':
