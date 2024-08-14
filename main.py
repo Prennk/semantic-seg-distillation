@@ -154,7 +154,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             best_epoch = epoch
             utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
-        if (epoch + 1) % 1 == 0 or (epoch + 1) == args.epochs:
+        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(model, images[:1], class_encoding, epoch)
@@ -235,8 +235,10 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     x = torch.randn(1, 3, args.width, args.height).to(args.device)
     t_model.eval()
     t_y = t_model(x)
+    t_model.train()
     s_model.eval()
     s_y = s_model(x)
+    s_model.train()
 
     t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
     s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
@@ -330,7 +332,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
             best_epoch = epoch
             utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
-        if (epoch + 1) % 1 == 0 or (epoch + 1) == args.epochs:
+        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(s_model, images[:1], class_encoding, epoch)
