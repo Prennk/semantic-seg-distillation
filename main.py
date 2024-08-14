@@ -154,7 +154,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             best_epoch = epoch
             utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
-        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
+        if (epoch + 1) % 1 == 0 or (epoch + 1) == args.epochs:
             # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(model, images[:1], class_encoding, epoch)
