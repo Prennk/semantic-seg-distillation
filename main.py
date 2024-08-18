@@ -10,7 +10,6 @@ import random
 from collections import OrderedDict
 from timeit import default_timer as timer
 from torchinfo import summary
-from comet_ml import Experiment
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
@@ -24,15 +23,6 @@ args = parser.parse_args()
 with open(args.config, 'r') as f:
     config = yaml.safe_load(f)
 args = utils.merge_args_with_config(args, config)
-
-# init comet_ml
-experiment = Experiment(
-    api_key=args.api_key,
-    project_name=args.project_name,
-    workspace=args.workspace)
-
-# save config to comet_ml
-experiment.log_parameters(vars(args))
 
 # print config from config.yaml
 print("-" * 70)
@@ -113,21 +103,9 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
-        experiment.log_metrics({
-            "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
-        }, epoch=epoch + 1)
-
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
-
-        experiment.log_metrics({
-            "val_loss": loss,
-            "val_miou": miou,
-            "val_mpa": mpa
-            }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
@@ -176,12 +154,6 @@ def test(model, test_loader, class_weights, class_encoding):
     class_pa = dict(zip(class_encoding.keys(), pa))
 
     print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
-
-    experiment.log_metrics({
-        "test_loss": loss,
-        "test_miou": miou,
-        "test_mpa": mpa
-        })
 
     # Print per class IoU
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
@@ -288,21 +260,9 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
-        experiment.log_metrics({
-            "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
-            }, step=epoch + 1)
-
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
-
-        experiment.log_metrics({
-            "val_loss": loss,
-            "val_miou": miou,
-            "val_mpa": mpa
-            }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
@@ -343,9 +303,6 @@ def predict(model, images, class_encoding, epoch):
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
     # utils.imshow_batch(images.data.cpu(), color_predictions)
-
-    for i, image in enumerate(color_predictions):
-        experiment.log_image(image, name=f"Segmentation Map {i}", step=epoch + 1)
 
 
 # Run only if this module is being run directly
@@ -409,5 +366,3 @@ if __name__ == '__main__':
 
     elapsed_end_time = timer()
     print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
-
-    experiment.end()
