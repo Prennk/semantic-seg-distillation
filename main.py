@@ -110,23 +110,25 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
-        # send train metric results to wandb
-        wandb.log({
-            "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
-            }, step=epoch + 1)
+        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epoch:
+            # send train metric results to wandb
+            wandb.log({
+                "train_loss": epoch_loss,
+                "train_miou": miou,
+                "train_mpa": mpa,
+                }, step=epoch + 1)
 
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
 
-        # send val metric results to wandb
-        wandb.log({
-            "val_loss": loss,
-            "val_miou": miou,
-            "val_mpa": mpa
-            }, step=epoch + 1)
+        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epoch:
+            # send val metric results to wandb
+            wandb.log({
+                "val_loss": loss,
+                "val_miou": miou,
+                "val_mpa": mpa
+                }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
