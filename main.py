@@ -363,7 +363,7 @@ def finetuning(train_loader, val_loader, class_weights, class_encoding, args):
     metric_iou = metrics.IoU(num_classes, ignore_index=ignore_index)
     metric_pa = metrics.PixelAccuracy(num_classes, ignore_index=ignore_index)
 
-    model, optimizer, start_epoch, best_miou, best_mpa = utils.load_checkpoint(model, optimizer, args.save_dir, args.name)
+    model, optimizer, start_epoch, best_miou, best_mpa = utils.load_model(model, optimizer, args.model_path)
     print("Resuming from model: Start epoch = {0} | Best mean IoU = {1:.4f}".format(start_epoch, best_miou))
     # Start Training
     print()
