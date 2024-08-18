@@ -487,6 +487,10 @@ if __name__ == '__main__':
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch}")
 
+    if args.mode.lower() == 'finetuning':
+        model, epoch, miou = finetuning(train_loader, val_loader, w_class, class_encoding, args)
+        print(f"Best mIoU: {miou} in epoch {epoch}")
+
     if args.mode.lower() == 'test':
         # Intialize a new ENet model
         num_classes = len(class_encoding)
