@@ -141,36 +141,4 @@ def merge_args_with_config(args, config):
             setattr(args, key, value)
     return args
 
-import os
-import torch
 
-def load_model(model, optimizer, checkpoint_path):
-    """Loads the model from a specified checkpoint path.
-
-    Keyword arguments:
-    - model (``nn.Module``): The stored model state is copied to this model instance.
-    - optimizer (``torch.optim``): The stored optimizer state is copied to this optimizer instance.
-    - checkpoint_path (``string``): The full path to the saved model checkpoint.
-
-    Returns:
-    The epoch, mean IoU, mPA, ``model``, and ``optimizer`` loaded from the checkpoint.
-    """
-    assert os.path.isfile(checkpoint_path), "The checkpoint file \"{0}\" doesn't exist.".format(checkpoint_path)
-
-    # Load the stored model parameters to the model instance
-    print(f'Loading model from {checkpoint_path}...')
-    checkpoint = torch.load(checkpoint_path)
-    model.model.load_state_dict(checkpoint['state_dict']['model'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    epoch = checkpoint['epoch']
-    miou = checkpoint['miou']
-    mpa = checkpoint.get('mpa', 0.0)
-
-    print(f"Model: {model}")
-    print(f"Optimizer: {optimizer}")
-    print(f"Epoch: {epoch}")
-    print(f"mIOU: {miou}")
-    print(f"mPA: {mpa}")
-    print('Model loaded successfully')
-
-    return model, optimizer, epoch, miou, mpa

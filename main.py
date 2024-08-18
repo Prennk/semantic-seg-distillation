@@ -346,6 +346,9 @@ def finetuning(train_loader, val_loader, class_weights, class_encoding, args):
                             row_settings=["var_names"])
     print(model_summary)
 
+    model_dict = torch.load(args.model_path, map_location=args.device)["state_dict"]
+    model.load_state_dict(model_dict)
+
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.SGD(
         model.parameters(),
