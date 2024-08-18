@@ -27,9 +27,9 @@ args = utils.merge_args_with_config(args, config)
 
 # init comet_ml
 experiment = Experiment(
-    api_key="rf05QF6bAyKMvFkEHPafabaOb",
-    project_name="SemSeg-Distill",
-    workspace="prennk")
+    api_key=args.api_key,
+    project_name=args.project_name,
+    workspace=args.workspace)
 
 # save config to comet_ml
 experiment.log_parameters(vars(args))
@@ -409,3 +409,5 @@ if __name__ == '__main__':
 
     elapsed_end_time = timer()
     print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
+
+    experiment.end()
