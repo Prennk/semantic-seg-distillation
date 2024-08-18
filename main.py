@@ -365,12 +365,16 @@ def finetuning(train_loader, val_loader, class_weights, class_encoding, args):
         ignore_index = None
     metric_iou = metrics.IoU(num_classes, ignore_index=ignore_index)
     metric_pa = metrics.PixelAccuracy(num_classes, ignore_index=ignore_index)
+    start_epoch = 0
+    best_miou = 0
+    best_mpa = 0
+    best_epoch = 0
 
     # Start Training
     print()
     train = loops.Train(model, train_loader, optimizer, criterion, metric_iou, metric_pa, args.device)
     val = loops.Test(model, val_loader, criterion, metric_iou, metric_pa, args.device)
-    for epoch in range(0, args.additional_epochs):
+    for epoch in range(start_epoch, args.additional_epochs):
         print("Epoch: {0:d}".format(epoch + 1))
 
         epoch_loss, (iou, miou), (pa, mpa), train_time = train.run_epoch(args.print_step)
