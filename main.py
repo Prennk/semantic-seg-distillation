@@ -10,15 +10,12 @@ import random
 from collections import OrderedDict
 from timeit import default_timer as timer
 from torchinfo import summary
-import wandb
+from comet_ml import Experiment
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
 from model.deeplabv3 import Create_DeepLabV3
 from distiller.vid import VIDLoss
-
-# init wandb
-wandb.init(project='SemSeg-Distill')
 
 # get config from config.yaml
 parser = ArgumentParser()
@@ -28,8 +25,14 @@ with open(args.config, 'r') as f:
     config = yaml.safe_load(f)
 args = utils.merge_args_with_config(args, config)
 
-# save config to wandb
-wandb.config.update(args)
+# init comet_ml
+experiment = Experiment(
+    pi_key="rf05QF6bAyKMvFkEHPafabaOb",
+    project_name="SemSeg-Distill",
+    workspace="prennk")
+
+# save config to comet_ml
+experiment.log_parameters(vars(args))
 
 # print config from config.yaml
 print("-" * 70)
@@ -110,25 +113,21 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
-        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epoch:
-            # send train metric results to wandb
-            wandb.log({
-                "train_loss": epoch_loss,
-                "train_miou": miou,
-                "train_mpa": mpa,
-                }, step=epoch + 1)
+        experiment.log_metrics({
+            "train_loss": epoch_loss,
+            "train_miou": miou,
+            "train_mpa": mpa,
+        }, epoch=epoch + 1)
 
         loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
 
-        if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epoch:
-            # send val metric results to wandb
-            wandb.log({
-                "val_loss": loss,
-                "val_miou": miou,
-                "val_mpa": mpa
-                }, step=epoch + 1)
+        experiment.log_metrics({
+            "val_loss": loss,
+            "val_miou": miou,
+            "val_mpa": mpa
+            }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if miou > best_miou:
@@ -143,7 +142,6 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
         if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
-            # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(model, images[:1], class_encoding, epoch)
 
@@ -179,8 +177,7 @@ def test(model, test_loader, class_weights, class_encoding):
 
     print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
 
-    # send val metric results to wandb
-    wandb.log({
+    experiment.log_metrics({
         "test_loss": loss,
         "test_miou": miou,
         "test_mpa": mpa
@@ -291,8 +288,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
               .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
 
-        # send train metric results to wandb
-        wandb.log({
+        experiment.log_metrics({
             "train_loss": epoch_loss,
             "train_miou": miou,
             "train_mpa": mpa,
@@ -302,8 +298,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, loss, miou, mpa, test_time))
 
-        # send val metric results to wandb
-        wandb.log({
+        experiment.log_metrics({
             "val_loss": loss,
             "val_miou": miou,
             "val_mpa": mpa
@@ -322,7 +317,6 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
             utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
         if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
-            # predict the segmentation map and send it to wandb
             images, _ = next(iter(val_loader))
             predict(s_model, images[:1], class_encoding, epoch)
 
@@ -350,10 +344,8 @@ def predict(model, images, class_encoding, epoch):
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
     # utils.imshow_batch(images.data.cpu(), color_predictions)
 
-    # send visualization to wandb
-    wandb.log({
-        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
-    }, step=epoch + 1)
+    for i, image in enumerate(color_predictions):
+        experiment.log_image(image, name=f"Segmentation Map {i}", step=epoch + 1)
 
 
 # Run only if this module is being run directly
