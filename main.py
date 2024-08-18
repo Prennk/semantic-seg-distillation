@@ -27,7 +27,7 @@ args = utils.merge_args_with_config(args, config)
 
 # init comet_ml
 experiment = Experiment(
-    pi_key="rf05QF6bAyKMvFkEHPafabaOb",
+    api_key="rf05QF6bAyKMvFkEHPafabaOb",
     project_name="SemSeg-Distill",
     workspace="prennk")
 
