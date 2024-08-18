@@ -48,3 +48,6 @@ student_layers:
   - dilated
   - regular4_1
   - regular5_1
+
+# fine-tuning post-distillation
+additional_epochs: 3
