@@ -298,7 +298,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
 
             # Save the model if it's the best thus far
             print("\nBest model based on mIoU thus far. Saving...\n")
-            best_miou = test_iou
+            best_miou = test_miou
             best_mpa = test_mpa
             best_epoch = epoch
             utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
