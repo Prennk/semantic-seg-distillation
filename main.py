@@ -101,40 +101,39 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))
 
-        epoch_loss, (iou, miou), (pa, mpa), train_time = train.run_epoch(args.print_step)
+        # train
+        epoch_loss, (train_iou, train_miou), (train_pa, train_mpa), train_time = train.run_epoch(args.print_step)
         lr_updater.step()
         last_lr = lr_updater.get_last_lr()
-
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
-              .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
-
-        loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
-        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
-              .format(epoch + 1, loss, miou, mpa, test_time))
-
+              .format(epoch + 1, epoch_loss, train_miou, train_mpa, last_lr[0], train_time))
         wandb.log({
             "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
+            "train_miou": train_miou,
+            "train_mpa": train_mpa,
+            }, step=epoch + 1)
+
+        # test
+        test_loss, (test_iou, test_miou), (test_pa, test_mpa), test_time = val.run_epoch(args.print_step)
+        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
+              .format(epoch + 1, test_loss, test_miou, test_mpa, test_time))
+        wandb.log({
+            "val_loss": test_loss,
+            "val_miou": test_miou,
+            "val_mpa": test_mpa
             }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
-        if miou > best_miou:
-            for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
+        if test_miou > best_miou:
+            for key, class_iou, class_pa in zip(class_encoding.keys(), test_iou, test_pa):
                 print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
             print("\nBest model based on mIoU thus far. Saving...\n")
-            best_miou = miou
-            best_mpa = mpa
+            best_miou = test_miou
+            best_mpa = test_mpa
             best_epoch = epoch
             utils.save_checkpoint(model, optimizer, epoch + 1, best_miou, best_mpa, args)
-
-            wandb.log({
-                "val_loss": loss,
-                "val_miou": miou,
-                "val_mpa": mpa
-                }, step=epoch + 1)
 
         if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
             images, _ = next(iter(val_loader))
@@ -270,40 +269,39 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))
 
-        epoch_loss, (iou, miou), (pa, mpa), train_time = distill.run_epoch(args.print_step)
+        # train
+        epoch_loss, (train_iou, train_miou), (train_pa, train_mpa), train_time = distill.run_epoch(args.print_step)
         lr_updater.step()
         last_lr = lr_updater.get_last_lr()
-
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
-              .format(epoch + 1, epoch_loss, miou, mpa, last_lr[0], train_time))
-
-        loss, (iou, miou), (pa, mpa), test_time = val.run_epoch(args.print_step)
-        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
-              .format(epoch + 1, loss, miou, mpa, test_time))
-              
+              .format(epoch + 1, epoch_loss, train_miou, train_mpa, last_lr[0], train_time))
         wandb.log({
             "train_loss": epoch_loss,
-            "train_miou": miou,
-            "train_mpa": mpa,
+            "train_miou": train_miou,
+            "train_mpa": train_mpa,
+            }, step=epoch + 1)
+
+        # test
+        test_loss, (test_iou, test_miou), (test_pa, test_mpa), test_time = val.run_epoch(args.print_step)
+        print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
+              .format(epoch + 1, test_loss, test_miou, test_mpa, test_time))
+        wandb.log({
+            "val_loss": test_loss,
+            "val_miou": test_miou,
+            "val_mpa": test_mpa
             }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
-        if miou > best_miou:
-            for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
+        if test_miou > best_miou:
+            for key, class_iou, class_pa in zip(class_encoding.keys(), test_iou, test_pa):
                 print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
             # Save the model if it's the best thus far
             print("\nBest model based on mIoU thus far. Saving...\n")
-            best_miou = miou
-            best_mpa = mpa
+            best_miou = test_iou
+            best_mpa = test_mpa
             best_epoch = epoch
             utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
-
-            wandb.log({
-                "val_loss": loss,
-                "val_miou": miou,
-                "val_mpa": mpa
-                }, step=epoch + 1)
 
         if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
             images, _ = next(iter(val_loader))
