@@ -191,7 +191,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     t_model = Create_DeepLabV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
 
     # load pretrained teacher
-    teacher_dict = torch.load(args.teacher_path, map_location=args.device)["state_dict"]
+    teacher_dict = torch.load(args.teacher_path, map_location=args.device, weights_only=True)["state_dict"]
     t_model.load_state_dict(teacher_dict)
 
     print(f"Creating student model: enet...")
