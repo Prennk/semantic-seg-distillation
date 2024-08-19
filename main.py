@@ -373,11 +373,11 @@ if __name__ == '__main__':
 
     if args.mode.lower() == 'train':
         model, epoch, miou = train(train_loader, val_loader, w_class, class_encoding, args)
-        print(f"Best mIoU: {miou} in epoch {epoch}")
+        print(f"Best mIoU: {miou} in epoch {epoch + 1}")
 
     if args.mode.lower() == "distill":
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
-        print(f"Best mIoU: {miou} in epoch {epoch}")
+        print(f"Best mIoU: {miou} in epoch {epoch + 1}")
 
     if args.mode.lower() == 'test':
         # Intialize a new ENet model
