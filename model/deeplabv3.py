@@ -15,7 +15,7 @@ class Create_DeepLabV3(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):
         super(Create_DeepLabV3, self).__init__()
         if args.model == "deeplabv3_resnet50":
-            print(f"Creating model: {args.model}")
+            print(f"Preparing model: {args.model}...")
             if args.mode in ["train", "test"]:
                 if args.pretrained == "backbone":
                     print("Loading pretrained ResNet50 IMAGENET1K_V2...")
@@ -42,7 +42,7 @@ class Create_DeepLabV3(nn.Module):
             self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
             self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
         elif args.model == "deeplabv3_resnet101":
-            print(f"Creating model: {args.model}")
+            print(f"Preparing model: {args.model}...")
             if args.mode in ["train", "test"]:
                 if args.pretrained == "backbone":
                     print("Loading pretrained ResNet101 IMAGENET1K_V2...")
