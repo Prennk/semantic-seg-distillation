@@ -24,13 +24,23 @@ def show_summary(model):
             row_settings=["var_names"]))
 
 if __name__ == "__main__":
-    if args.model == "deeplabv3":
+    if args.model == "deeplabv3_resnet50":
+        args.model = "deeplabv3_resnet50"
+        model = Create_DeepLabV3(11, args)
+        show_summary(model)
+    elif args.model == "deeplabv3_resnet101":
+        args.model = "deeplabv3_resnet101"
         model = Create_DeepLabV3(11, args)
         show_summary(model)
     elif args.model == "enet":
         model = Create_ENet(11)
         show_summary(model)
     elif args.model == "all":
+        args.model = "deeplabv3_resnet50"
+        model = Create_DeepLabV3(11, args)
+        show_summary(model)
+
+        args.model = "deeplabv3_resnet101"
         model = Create_DeepLabV3(11, args)
         show_summary(model)
 
