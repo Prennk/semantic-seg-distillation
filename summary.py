@@ -21,7 +21,7 @@ def show_summary(model):
     col_names=["input_size", "output_size", "num_params"],
     col_width=20,
     device=args.device,
-    row_settings=["var_names"]))
+    row_settings=["var_names"])
 
 if __name__ == "__main__":
     if args.model == "deeplabv3_resnet50":
