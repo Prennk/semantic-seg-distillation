@@ -39,11 +39,11 @@ if __name__ == "__main__":
         args.model = "deeplabv3_resnet50"
         model = Create_DeepLabV3(11, args)
         show_summary(model)
-
+        print()
         args.model = "deeplabv3_resnet101"
         model = Create_DeepLabV3(11, args)
         show_summary(model)
-
+        print()
         model = Create_ENet(11)
         show_summary(model)
     else:
