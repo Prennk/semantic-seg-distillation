@@ -59,7 +59,7 @@ class ModifiedDeepLabV3(nn.Module):
     def forward(self, x):
         input_shape = x.shape[-2:]
         features = self.backbone(x)
-        x = self.classifier[0](features['out'])
+        x = self.classifier(features['out'])
         x = nn.functional.interpolate(x, size=input_shape, mode='bilinear', align_corners=False)
 
         aux = self.aux_classifier(features['aux'])
