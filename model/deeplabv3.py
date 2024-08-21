@@ -12,7 +12,6 @@ class ModifiedResNet101(nn.Module):
         self.conv1 = resnet.conv1
         self.bn1 = resnet.bn1
         self.relu = resnet.relu
-        self.maxpool = resnet.maxpool
 
         self.conv2 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
         self.bn2 = nn.BatchNorm2d(64)
@@ -21,6 +20,8 @@ class ModifiedResNet101(nn.Module):
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
         self.bn3 = nn.BatchNorm2d(64)
         self.relu3 = nn.ReLU(inplace=True)
+
+        self.maxpool = resnet.maxpool
 
         self.layer1 = resnet.layer1
         self.layer2 = resnet.layer2
