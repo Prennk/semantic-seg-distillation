@@ -10,7 +10,7 @@ import random
 from collections import OrderedDict
 from timeit import default_timer as timer
 from torchinfo import summary
-import wandb
+import wandb # type: ignore
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet

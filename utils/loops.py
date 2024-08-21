@@ -54,6 +54,8 @@ class Train:
             if isinstance(outputs, OrderedDict):
                 aux_outputs = outputs['aux']
                 classifier_outputs = outputs['out']
+                print(f"aux_outputs shape: {aux_outputs.shape}")
+                print(f"classifier_outputs shape: {classifier_outputs.shape}")
 
                 # Loss computation
                 aux_loss = self.criterion(aux_outputs, labels)
