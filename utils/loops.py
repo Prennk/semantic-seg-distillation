@@ -59,9 +59,9 @@ class Train:
                 aux_loss = self.criterion(aux_outputs, labels)
                 classifier_loss = self.criterion(classifier_outputs, labels)
                 total_loss = (0.4 * aux_loss) + classifier_loss
-
-            loss = self.criterion(outputs, labels)
-            total_loss = loss
+            else:
+                loss = self.criterion(outputs, labels)
+                total_loss = loss
 
             # Backpropagation
             self.optim.zero_grad()
