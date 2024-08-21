@@ -1,6 +1,6 @@
 import torch
 from torchinfo import summary
-from model.deeplabv3 import Create_DeepLabV3
+from model.deeplabv3_m import Create_DeepLabV3
 from model.enet import Create_ENet
 from utils.utils import merge_args_with_config
 

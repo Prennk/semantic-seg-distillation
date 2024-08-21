@@ -14,7 +14,7 @@ import wandb # type: ignore
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
-from model.deeplabv3 import Create_DeepLabV3
+from model.deeplabv3_m import Create_DeepLabV3
 from distiller.vid import VIDLoss
 
 wandb.init(project="SemSeg-Distill")
