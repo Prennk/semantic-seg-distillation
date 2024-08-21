@@ -44,22 +44,26 @@ def test(model, test_loader, class_weights, class_encoding):
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
         print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
+def main():
+    print("starting inference...")
+    from data.camvid import CamVid as dataset
 
-from data.camvid import CamVid as dataset
+    loaders, w_class, class_encoding = data_utils.load_dataset(dataset, args)
+    train_loader, val_loader, test_loader = loaders
+    num_classes = len(class_encoding)
 
-loaders, w_class, class_encoding = data_utils.load_dataset(dataset, args)
-train_loader, val_loader, test_loader = loaders
-num_classes = len(class_encoding)
+    if args.model == 'enet':
+        model = Create_ENet(num_classes).to(args.device)
+    elif args.model == "deeplabv3_resnet101":
+        model = Create_DeepLabV3(num_classes, args).to(args.device)
+    else:
+        raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
 
-if args.model == 'enet':
-    model = Create_ENet(num_classes).to(args.device)
-elif args.model == "deeplabv3_resnet101":
-    model = Create_DeepLabV3(num_classes, args).to(args.device)
-else:
-    raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
+    optimizer = optim.SGD(model.parameters())
+    model = utils.load_checkpoint(model, optimizer, args.save_dir,
+                                        args.name)[0]
 
-optimizer = optim.SGD(model.parameters())
-model = utils.load_checkpoint(model, optimizer, args.save_dir,
-                                    args.name)[0]
+    test(model, test_loader, w_class, class_encoding)
 
-test(model, test_loader, w_class, class_encoding)
+if __name__ == "__main__":
+    main()

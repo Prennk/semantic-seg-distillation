@@ -16,6 +16,7 @@ from utils import utils, loops, metrics, transforms as ext_transforms, data_util
 from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from distiller.vid import VIDLoss
+from inference import main as inference
 
 wandb.init(project="SemSeg-Distill")
 
@@ -140,48 +141,6 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
             predict(model, images[:1], class_encoding, epoch)
 
     return model, best_epoch, best_miou
-
-
-def test(model, test_loader, class_weights, class_encoding):
-    print("\nStart testing...")
-
-    num_classes = len(class_encoding)
-
-    # We are going to use the CrossEntropyLoss loss function as it's most
-    # frequentely used in classification problems with multiple classes which
-    # fits the problem. This criterion  combines LogSoftMax and NLLLoss.
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
-
-    # Evaluation metric
-    if args.ignore_unlabeled:
-        ignore_index = list(class_encoding).index('unlabeled')
-    else:
-        ignore_index = None
-    metric_iou = metrics.IoU(num_classes, ignore_index=ignore_index)
-    metric_pa = metrics.PixelAccuracy(num_classes, ignore_index=ignore_index)
-
-    # Test the trained model on the test set
-    test = loops.Test(model, test_loader, criterion, metric_iou, metric_pa, args.device)
-
-    print("Running test dataset...")
-
-    loss, (iou, miou), (pa, mpa) = test.run_epoch(args.print_step)
-    class_iou = dict(zip(class_encoding.keys(), iou))
-    class_pa = dict(zip(class_encoding.keys(), pa))
-
-    print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
-
-    # Print per class IoU
-    for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
-        print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
-
-    # Show a batch of samples and labels
-    if args.imshow_batch:
-        print("[Warning] imshow_batch is deprecated")
-        # print("A batch of predictions from the test set...")
-        # images, _ = next(iter(test_loader))
-        # predict(model, images, class_encoding)
-
 
 def distill(train_loader, val_loader, class_weights, class_encoding, args):
     num_classes = len(class_encoding)
@@ -374,26 +333,12 @@ if __name__ == '__main__':
     if args.mode.lower() == 'train':
         model, epoch, miou = train(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch + 1}")
+        inference()
 
     if args.mode.lower() == "distill":
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch + 1}")
-
-    if args.mode.lower() == 'test':
-        # Intialize a new ENet model
-        num_classes = len(class_encoding)
-        model = Create_ENet(num_classes).to(args.device)
-
-
-        # Initialize a optimizer just so we can retrieve the model from the
-        # checkpoint
-        optimizer = optim.Adam(model.parameters())
-
-        # Load the previoulsy saved model state to the ENet model
-        model = utils.load_checkpoint(model, optimizer, args.save_dir,
-                                      args.name)[0]
-
-        test(model, test_loader, w_class, class_encoding)
+        inference()
 
     elapsed_end_time = timer()
     print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
