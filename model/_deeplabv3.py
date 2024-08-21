@@ -11,7 +11,6 @@ class Create_DeepLabV3(nn.Module):
                 print("Loading pretrained ResNet50 IMAGENET1K_V2...")
                 weights_backbone = models.ResNet50_Weights.IMAGENET1K_V2
             elif args.pretrained == "all":
-                print("Loading pretrained ResNet50 COCO_WITH_VOC_LABELS_V1...")
                 weights_backbone = None
             elif not args.pretrained or args.mode == "distill":
                 weights_backbone = None

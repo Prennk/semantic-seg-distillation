@@ -83,6 +83,9 @@ class Create_DeepLabV3(nn.Module):
             raise ValueError(f"Unknown argument {args.mode}")
         
         self.model = ModifiedDeepLabV3(num_classes=num_classes, weights_backbone=weights_backbone)
+        self.model.classifier[4] = nn.Sequential(
+            nn.Dropout(0.1),
+            nn.Conv2d(256, num_classes, kernel_size=1))
 
         if args.mode in ["train", "test"]:
             if args.pretrained and args.freeze:
