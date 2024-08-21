@@ -50,6 +50,8 @@ class Train:
 
             # Forward propagation
             outputs = self.model(inputs)
+            print(type(outputs))
+            print(outputs)
 
             if isinstance(outputs, OrderedDict or tuple):
                 aux_outputs = outputs['aux']
