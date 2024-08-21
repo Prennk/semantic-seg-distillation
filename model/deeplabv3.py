@@ -2,6 +2,7 @@ import torch.nn as nn
 from torchvision import models
 from torchvision.models.segmentation import deeplabv3_resnet101
 from torchvision.models.segmentation.deeplabv3 import DeepLabHead, FCNHead, DeepLabV3, IntermediateLayerGetter
+from collections import OrderedDict
 
 class ModifiedResNet101(nn.Module):
     def __init__(self, weights_backbone,):
@@ -64,7 +65,7 @@ class ModifiedDeepLabV3(nn.Module):
         aux = self.aux_classifier(features['aux'])
         aux = nn.functional.interpolate(aux, size=input_shape, mode='bilinear', align_corners=False)
 
-        return x, aux
+        return OrderedDict({'out': x, 'aux': aux})
 
 class Create_DeepLabV3(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):

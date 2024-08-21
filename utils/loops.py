@@ -51,7 +51,7 @@ class Train:
             # Forward propagation
             outputs = self.model(inputs)
 
-            if isinstance(outputs, (OrderedDict, tuple)):
+            if isinstance(outputs, OrderedDict):
                 aux_outputs = outputs['aux']
                 classifier_outputs = outputs['out']
 
@@ -131,7 +131,7 @@ class Test:
                 # Forward propagation
                 outputs = self.model(inputs)
                 
-                if isinstance(outputs, (OrderedDict, tuple)):
+                if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
 
                 # Loss computation
@@ -201,12 +201,12 @@ class Distill:
             # Forward propagation for teacher
             with torch.inference_mode():
                 t_outputs = self.t_model(inputs)
-                if isinstance(t_outputs, (OrderedDict, tuple)):
+                if isinstance(t_outputs, OrderedDict):
                     t_outputs = t_outputs['out']
 
             # Forward propagation for student
             s_outputs = self.s_model(inputs)
-            if isinstance(s_outputs, (OrderedDict, tuple)):
+            if isinstance(s_outputs, OrderedDict):
                 s_outputs = s_outputs['out']
 
             # Loss computation
