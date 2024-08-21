@@ -52,18 +52,24 @@ class Train:
             outputs = self.model(inputs)
 
             if isinstance(outputs, OrderedDict):
-                outputs = outputs['out']
+                aux_outputs = outputs['aux']
+                classifier_outputs = outputs['out']
 
-            # Loss computation
+                # Loss computation
+                aux_loss = self.criterion(aux_outputs, labels)
+                classifier_loss = self.criterion(classifier_outputs, labels)
+                total_loss = (0.4 * aux_loss) + classifier_loss
+
             loss = self.criterion(outputs, labels)
+            total_loss = loss
 
             # Backpropagation
             self.optim.zero_grad()
-            loss.backward()
+            total_loss.backward()
             self.optim.step()
 
             # Keep track of loss for current epoch
-            epoch_loss += loss.item()
+            epoch_loss += total_loss.item()
 
             # Keep track of the evaluation metric
             self.metric_iou.add(outputs.detach(), labels.detach())
