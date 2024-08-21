@@ -59,9 +59,17 @@ class Train:
                 aux_loss = self.criterion(aux_outputs, labels)
                 classifier_loss = self.criterion(classifier_outputs, labels)
                 total_loss = (0.4 * aux_loss) + classifier_loss
+
+                # Keep track of the evaluation metric
+                self.metric_iou.add(classifier_outputs.detach(), labels.detach())
+                self.metric_pa.add(classifier_outputs.detach(), labels.detach())
             else:
                 loss = self.criterion(outputs, labels)
                 total_loss = loss
+
+                # Keep track of the evaluation metric
+                self.metric_iou.add(outputs.detach(), labels.detach())
+                self.metric_pa.add(outputs.detach(), labels.detach())
 
             # Backpropagation
             self.optim.zero_grad()
@@ -70,10 +78,6 @@ class Train:
 
             # Keep track of loss for current epoch
             epoch_loss += total_loss.item()
-
-            # Keep track of the evaluation metric
-            self.metric_iou.add(outputs.detach(), labels.detach())
-            self.metric_pa.add(outputs.detach(), labels.detach())
 
             end_time = timer()
             total_time = end_time - start_time
