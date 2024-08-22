@@ -35,11 +35,11 @@ def test(model, test_loader, class_weights, class_encoding):
 
     print("Running test dataset...")
 
-    loss, (iou, miou), (pa, mpa) = test.run_epoch(args.print_step)
+    loss, (iou, miou), (pa, mpa), test_time = test.run_epoch(args.print_step)
     class_iou = dict(zip(class_encoding.keys(), iou))
     class_pa = dict(zip(class_encoding.keys(), pa))
 
-    print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f}".format(loss, miou, mpa))
+    print("Result => Avg. loss: {0:.4f} | mIoU: {1:.4f} | mPA: {2:.4f} | time elapsed: {3:.3f}".format(loss, miou, mpa, test_time))
 
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
         print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
