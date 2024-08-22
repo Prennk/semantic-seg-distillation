@@ -137,6 +137,8 @@ class Test:
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
+                elif isinstance(outputs, list):
+                    outputs = outputs[0]
 
                 # Loss computation
                 loss = self.criterion(outputs, labels)
