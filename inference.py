@@ -16,6 +16,9 @@ with open(args.config, 'r') as f:
     config = yaml.safe_load(f)
 args = utils.merge_args_with_config(args, config)
 
+args.pretrained = False
+args.freeze = False
+
 def test(model, test_loader, class_weights, class_encoding):
     print("\nStart testing...")
 
