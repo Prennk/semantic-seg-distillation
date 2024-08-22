@@ -20,7 +20,7 @@ args = utils.merge_args_with_config(args, config)
 def test(model, test_loader, class_weights, class_encoding):
     print("\nStart testing...")
     num_classes = len(class_encoding)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion = nn.CrossEntropyLoss(weight=None)
     if args.ignore_unlabeled:
         ignore_index = list(class_encoding).index('unlabeled')
     else:
