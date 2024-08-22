@@ -352,6 +352,7 @@ class DeepLabV3(SegBaseModel):
         c1, c2, c3, c4 = self.base_forward(x)
 
         x, x_feat_after_aspp = self.head(c4)
+        x = F.interpolate(x, size, mode='bilinear', align_corners=True)
 
         if self.aux:
             auxout = self.auxlayer(c3)
