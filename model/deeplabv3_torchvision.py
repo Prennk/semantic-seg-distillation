@@ -26,7 +26,7 @@ class Create_DeepLabV3(nn.Module):
         self.model.classifier[4] = nn.Sequential(
             nn.Dropout(0.5),
             nn.Conv2d(256, num_classes, kernel_size=1))
-        self.model.classifier[4] = nn.Sequential(
+        self.model.aux_classifier[4] = nn.Sequential(
             nn.Dropout(0.5),
             nn.Conv2d(256, num_classes, kernel_size=1))
 
