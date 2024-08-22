@@ -23,12 +23,8 @@ class Create_DeepLabV3(nn.Module):
                 weights=None, 
                 aux_loss=True,
                 weights_backbone=weights_backbone)
-        self.model.classifier[4] = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Conv2d(256, num_classes, kernel_size=1))
-        self.model.aux_classifier[4] = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Conv2d(256, num_classes, kernel_size=1))
+        self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
+        self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
 
         if args.mode in ["train", "test"]:
             if args.pretrained and args.freeze:
