@@ -41,7 +41,7 @@ class CamVid(data.Dataset):
         ('sky', (128, 128, 128)),
         ('building', (128, 0, 0)),
         ('pole', (192, 192, 128)),
-        ('road_marking', (255, 69, 0)),
+        # ('road_marking', (255, 69, 0)),
         ('road', (128, 64, 128)),
         ('pavement', (60, 40, 222)),
         ('tree', (128, 128, 0)),
