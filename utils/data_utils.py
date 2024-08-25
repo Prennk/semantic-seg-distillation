@@ -139,7 +139,7 @@ def load_dataset(dataset, args):
     print("(this can take a while depending on the dataset size)")
 
     if class_weights is not None:
-        if args.ignore_unlabeled and 'unlabeled' in class_encoding:
+        if args.ignore_unlabeled and len(class_encoding) != len(class_weights):
             # Remove the weight for 'unlabeled' class
             ignore_index = list(class_encoding.keys()).index('unlabeled')
             class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
