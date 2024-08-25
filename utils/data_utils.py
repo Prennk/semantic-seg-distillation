@@ -137,7 +137,7 @@ def load_dataset(dataset, args):
     class_weights = None
     if args.weighing:
         if args.weighing.lower() == 'enet':
-            class_weights = enet_weighing(train_loader, num_classes, ignore_index=-1)
+            class_weights = enet_weighing(train_loader, num_classes, ignore_index=-2)
         elif args.weighing.lower() == 'mfb':
             class_weights = median_freq_balancing(train_loader, num_classes)
 
