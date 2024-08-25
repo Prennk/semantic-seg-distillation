@@ -57,6 +57,7 @@ def load_dataset(dataset, args):
 
     # Get encoding between pixel values in label images and RGB colors
     class_encoding = train_set.color_encoding
+    ignore_index = None
 
     # Remove the road_marking class from the CamVid dataset as it's merged
     # with the road class
@@ -138,6 +139,11 @@ def load_dataset(dataset, args):
     print("(this can take a while depending on the dataset size)")
 
     if class_weights is not None:
+        if args.ignore_unlabeled and 'unlabeled' in class_encoding:
+            # Remove the weight for 'unlabeled' class
+            ignore_index = list(class_encoding.keys()).index('unlabeled')
+            class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
+            print(f"[Warning] Removing 'unlabeled' class weight from class weights.")
         print(f"Num of class weights: {len(class_weights)}")
         print("Class weights:", class_weights)
 
