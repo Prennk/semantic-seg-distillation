@@ -83,6 +83,7 @@ def load_dataset(dataset, args):
         images, labels = next(iter(train_loader))
     print("Image size:", images.size())
     print("Label size:", labels.size())
+    print("Unique label:", torch.unique(labels))
     print("Class-color encoding:", class_encoding)
 
     # Show a batch of samples and labels
