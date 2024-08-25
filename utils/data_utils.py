@@ -116,7 +116,7 @@ def load_dataset(dataset, args):
         images, labels = next(iter(train_loader))
 
     # Remove 'unlabeled' class from labels if present
-    if ignore_unlabeled and 'unlabeled' in class_encoding:
+    if ignore_unlabeled:
         labels = (labels != ignore_index).long() * labels
         labels = labels[labels != ignore_index]
         print(f"Num of labels: {len(labels)}")
