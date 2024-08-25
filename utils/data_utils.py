@@ -135,7 +135,6 @@ def load_dataset(dataset, args):
             class_weights = torch.cat((class_weights[:unlabeled_index], class_weights[unlabeled_index+1:]), dim=0)
             print(f"[Warning] Removed 'unlabeled' class weight from class weights.")
 
-        print(f"Num of class weights: {len(class_weights)}")
-        print("Class weights:", class_weights)
+    print("Class weights:", class_weights)
 
     return (train_loader, val_loader, test_loader), class_weights, class_encoding
