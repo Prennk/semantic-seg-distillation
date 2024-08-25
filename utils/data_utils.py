@@ -119,6 +119,7 @@ def load_dataset(dataset, args):
     if ignore_unlabeled and 'unlabeled' in class_encoding:
         labels = (labels != ignore_index).long() * labels
         labels = labels[labels != ignore_index]
+        print(f"Num of labels: {len(labels)}")
 
     print("Image size:", images.size())
     print("Label size:", labels.size())
