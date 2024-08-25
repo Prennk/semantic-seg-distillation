@@ -167,7 +167,6 @@ class CamVid(data.Dataset):
         # Convert back to torch tensor
         label = torch.from_numpy(label_np).long()
 
-
         return img, label
 
     def __len__(self):
