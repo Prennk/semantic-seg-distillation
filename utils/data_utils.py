@@ -121,7 +121,7 @@ def load_dataset(dataset, args):
 
     print("Image size:", images.size())
     print("Label size:", labels.size())
-    print(f"Num of class weights: {len(class_weights)}")
+    print(f"Num of class weights: {len(class_encoding)}")
     print("Class-color encoding:", class_encoding)
 
     if args.imshow_batch:
