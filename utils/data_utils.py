@@ -23,6 +23,7 @@ def load_dataset(dataset, args):
     ])
 
     # Get selected dataset
+    # Load the training set as tensors
     train_set = dataset(
         args.dataset_dir,
         transform=image_transform,
@@ -33,6 +34,7 @@ def load_dataset(dataset, args):
         shuffle=True,
         num_workers=args.workers)
 
+    # Load the validation set as tensors
     val_set = dataset(
         args.dataset_dir,
         mode='val',
@@ -44,6 +46,7 @@ def load_dataset(dataset, args):
         shuffle=False,
         num_workers=args.workers)
 
+    # Load the test set as tensors
     test_set = dataset(
         args.dataset_dir,
         mode='test',
@@ -55,9 +58,8 @@ def load_dataset(dataset, args):
         shuffle=False,
         num_workers=args.workers)
 
-    # Get encoding between pixel values in label images and RGB colors
+    # Get encoding between pixel valus in label images and RGB colors
     class_encoding = train_set.color_encoding
-    ignore_index = None
 
     # Remove the road_marking class from the CamVid dataset as it's merged
     # with the road class
@@ -66,46 +68,11 @@ def load_dataset(dataset, args):
             del class_encoding['road_marking']
             print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
 
-    # Check if 'unlabeled' class needs to be ignored
-    ignore_unlabeled = args.ignore_unlabeled
-    if ignore_unlabeled and 'unlabeled' in class_encoding:
-        ignore_index = list(class_encoding).index('unlabeled')
-        # Remove 'unlabeled' from class encoding
-        del class_encoding['unlabeled']
-        print(f"[Warning] Deleting 'unlabeled' class from class encoding")
+    # Get number of classes to predict
+    num_classes = len(class_encoding)
 
-        # Remove 'unlabeled' from class weights
-        class_weights = 0
-        if args.weighing:
-            if args.weighing.lower() == 'enet':
-                class_weights = enet_weighing(train_loader, len(class_encoding))
-            elif args.weighing.lower() == 'mfb':
-                class_weights = median_freq_balancing(train_loader, len(class_encoding))
-            else:
-                class_weights = None
-        else:
-            class_weights = None
-
-        if class_weights is not None:
-            class_weights = torch.from_numpy(class_weights).float().to(args.device)
-    else:
-        # Get number of classes to predict
-        num_classes = len(class_encoding)
-        class_weights = 0
-        if args.weighing:
-            if args.weighing.lower() == 'enet':
-                class_weights = enet_weighing(train_loader, num_classes)
-            elif args.weighing.lower() == 'mfb':
-                class_weights = median_freq_balancing(train_loader, num_classes)
-            else:
-                class_weights = None
-        else:
-            class_weights = None
-
-        if class_weights is not None:
-            class_weights = torch.from_numpy(class_weights).float().to(args.device)
-
-    print("Number of classes to predict:", len(class_encoding))
+    # Print information for debugging
+    print("Number of classes to predict:", num_classes)
     print("Train dataset size:", len(train_set))
     print("Validation dataset size:", len(val_set))
 
@@ -114,18 +81,11 @@ def load_dataset(dataset, args):
         images, labels = next(iter(test_loader))
     else:
         images, labels = next(iter(train_loader))
-
-    # Remove 'unlabeled' class from labels if present
-    if ignore_unlabeled:
-        labels = (labels != ignore_index).long() * labels
-        labels = labels[labels != ignore_index]
-        print(f"Num of labels: {len(labels)}")
-
     print("Image size:", images.size())
     print("Label size:", labels.size())
-    print(f"Num of class weights: {len(class_encoding)}")
     print("Class-color encoding:", class_encoding)
 
+    # Show a batch of samples and labels
     if args.imshow_batch:
         print("Close the figure window to continue...")
         label_to_rgb = transforms.Compose([
@@ -135,17 +95,30 @@ def load_dataset(dataset, args):
         color_labels = batch_transform(labels, label_to_rgb)
         imshow_batch(images, color_labels)
 
+    # Get class weights from the selected weighing technique
     print("Weighing technique:", args.weighing)
     print("Computing class weights...")
     print("(this can take a while depending on the dataset size)")
+    class_weights = 0
+    if args.weighing:
+        if args.weighing.lower() == 'enet':
+            class_weights = enet_weighing(train_loader, num_classes)
+        elif args.weighing.lower() == 'mfb':
+            class_weights = median_freq_balancing(train_loader, num_classes)
+        else:
+            class_weights = None
+    else:
+        class_weights = None
 
     if class_weights is not None:
-        if args.ignore_unlabeled and len(class_encoding) != len(class_weights):
-            # Remove the weight for 'unlabeled' class
-            class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
-            print(f"[Warning] Removing 'unlabeled' class weight from class weights.")
-        print(f"Num of class weights: {len(class_weights)}")
-        print("Class weights:", class_weights)
+        class_weights = torch.from_numpy(class_weights).float().to(args.device)
+        # Set the weight of the unlabeled class to 0
+        # if args.ignore_unlabeled:
+        #     ignore_index = list(class_encoding).index('unlabeled')
+        #     class_weights[ignore_index] = 0
+
+    print("Class weights:", class_weights)
 
     return (train_loader, val_loader,
             test_loader), class_weights, class_encoding
+    
