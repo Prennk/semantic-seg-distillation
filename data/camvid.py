@@ -129,6 +129,10 @@ class CamVid(data.Dataset):
         if self.label_transform is not None:
             label = self.label_transform(label)
 
+        road_marking_color = (255, 69, 0)
+        road_color = (128, 64, 128)
+        label[label == road_marking_color] = road_color
+
         unlabeled_color = (0, 0, 0)
         label[label == unlabeled_color] = self.ignore_index
 
