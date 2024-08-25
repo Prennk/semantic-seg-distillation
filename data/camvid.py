@@ -1,7 +1,5 @@
 import os
-import numpy as np
 from collections import OrderedDict
-import torch
 import torch.utils.data as data
 from . import utils
 
@@ -43,7 +41,7 @@ class CamVid(data.Dataset):
         ('sky', (128, 128, 128)),
         ('building', (128, 0, 0)),
         ('pole', (192, 192, 128)),
-        # ('road_marking', (255, 69, 0)),
+        ('road_marking', (255, 69, 0)),
         ('road', (128, 64, 128)),
         ('pavement', (60, 40, 222)),
         ('tree', (128, 128, 0)),
@@ -52,41 +50,20 @@ class CamVid(data.Dataset):
         ('car', (64, 0, 128)),
         ('pedestrian', (64, 64, 0)),
         ('bicyclist', (0, 128, 192)),
-        # ('unlabeled', (0, 0, 0))
+        ('unlabeled', (0, 0, 0))
     ])
-
-    color_to_label = {
-        (128, 128, 128): 0,  # sky
-        (128, 0, 0): 1,      # building
-        (192, 192, 128): 2,  # pole
-        (255, 69, 0): 3,   # road_marking
-        (128, 64, 128): 3,   # road
-        (60, 40, 222): 4,    # pavement
-        (128, 128, 0): 5,    # tree
-        (192, 128, 128): 6,  # sign_symbol
-        (64, 64, 128): 7,    # fence
-        (64, 0, 128): 8,     # car
-        (64, 64, 0): 9,      # pedestrian
-        (0, 128, 192): 10,   # bicyclist
-        # (0, 0, 0):11
-    }
-
 
     def __init__(self,
                  root_dir,
                  mode='train',
                  transform=None,
                  label_transform=None,
-                 loader=utils.pil_loader,
-                 color_to_label=color_to_label,
-                 ignore_index=255):
+                 loader=utils.pil_loader):
         self.root_dir = root_dir
         self.mode = mode
         self.transform = transform
         self.label_transform = label_transform
         self.loader = loader
-        self.color_to_label = color_to_label
-        self.ignore_index = ignore_index
 
         if self.mode.lower() == 'train':
             # Get the training data and labels filepaths
@@ -149,23 +126,6 @@ class CamVid(data.Dataset):
 
         if self.label_transform is not None:
             label = self.label_transform(label)
-
-        # Convert label to numpy array
-        label_np = np.array(label)
-
-        # Assuming the label is already in the indexed format (single channel)
-        road_marking_index = self.color_to_label[(255, 69, 0)]  # Road marking index
-        road_index = self.color_to_label[(128, 64, 128)]        # Road index
-
-        # Replace road_marking_index with road_index
-        label_np[label_np == road_marking_index] = road_index
-
-        # Convert any pixel not in valid range to ignore_index
-        valid_labels = list(self.color_to_label.values()) + [self.ignore_index]
-        label_np = np.where(np.isin(label_np, valid_labels, invert=True), self.ignore_index, label_np)
-
-        # Convert back to torch tensor
-        label = torch.from_numpy(label_np).long()
 
         return img, label
 

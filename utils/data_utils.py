@@ -63,10 +63,10 @@ def load_dataset(dataset, args):
 
     # Remove the road_marking class from the CamVid dataset as it's merged
     # with the road class
-    # if args.dataset.lower() == 'camvid':
-    #     if 'road_marking' in class_encoding:
-    #         del class_encoding['road_marking']
-    #         print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
+    if args.dataset.lower() == 'camvid':
+        if 'road_marking' in class_encoding:
+            del class_encoding['road_marking']
+            print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
 
     # Get number of classes to predict
     num_classes = len(class_encoding)
@@ -83,7 +83,6 @@ def load_dataset(dataset, args):
         images, labels = next(iter(train_loader))
     print("Image size:", images.size())
     print("Label size:", labels.size())
-    print("Unique label:", torch.unique(labels))
     print("Class-color encoding:", class_encoding)
 
     # Show a batch of samples and labels
@@ -114,9 +113,9 @@ def load_dataset(dataset, args):
     if class_weights is not None:
         class_weights = torch.from_numpy(class_weights).float().to(args.device)
         # Set the weight of the unlabeled class to 0
-        # if args.ignore_unlabeled:
-        #     ignore_index = list(class_encoding).index('unlabeled')
-        #     class_weights[ignore_index] = 0
+        if args.ignore_unlabeled:
+            ignore_index = list(class_encoding).index('unlabeled')
+            class_weights[ignore_index] = 0
 
     print("Class weights:", class_weights)
 
