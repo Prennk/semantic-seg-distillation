@@ -58,12 +58,14 @@ class CamVid(data.Dataset):
                  mode='train',
                  transform=None,
                  label_transform=None,
-                 loader=utils.pil_loader):
+                 loader=utils.pil_loader,
+                 ignore_index=255):
         self.root_dir = root_dir
         self.mode = mode
         self.transform = transform
         self.label_transform = label_transform
         self.loader = loader
+        self.ignore_index = ignore_index
 
         if self.mode.lower() == 'train':
             # Get the training data and labels filepaths
@@ -126,6 +128,9 @@ class CamVid(data.Dataset):
 
         if self.label_transform is not None:
             label = self.label_transform(label)
+
+        unlabeled_color = (0, 0, 0)
+        label[label == unlabeled_color] = self.ignore_index
 
         return img, label
 
