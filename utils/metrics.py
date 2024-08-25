@@ -127,15 +127,15 @@ class IoU(Metric):
         super().__init__()
         self.conf_metric = ConfusionMatrix(num_classes, normalized)
 
-        if ignore_index is None:
-            self.ignore_index = None
-        elif isinstance(ignore_index, int):
-            self.ignore_index = (ignore_index,)
-        else:
-            try:
-                self.ignore_index = tuple(ignore_index)
-            except TypeError:
-                raise ValueError("'ignore_index' must be an int or iterable")
+        # if ignore_index is None:
+        #     self.ignore_index = None
+        # elif isinstance(ignore_index, int):
+        #     self.ignore_index = (ignore_index,)
+        # else:
+        #     try:
+        #         self.ignore_index = tuple(ignore_index)
+        #     except TypeError:
+        #         raise ValueError("'ignore_index' must be an int or iterable")
 
     def reset(self):
         self.conf_metric.reset()
@@ -179,9 +179,9 @@ class IoU(Metric):
             is the mean IoU.
         """
         conf_matrix = self.conf_metric.value()
-        if self.ignore_index is not None:
-            conf_matrix[:, self.ignore_index] = 0
-            conf_matrix[self.ignore_index, :] = 0
+        # if self.ignore_index is not None:
+        #     conf_matrix[:, self.ignore_index] = 0
+        #     conf_matrix[self.ignore_index, :] = 0
         true_positive = np.diag(conf_matrix)
         false_positive = np.sum(conf_matrix, 0) - true_positive
         false_negative = np.sum(conf_matrix, 1) - true_positive
@@ -210,15 +210,15 @@ class PixelAccuracy(Metric):
         super().__init__()
         self.conf_matrix = ConfusionMatrix(num_classes, normalized)
 
-        if ignore_index is None:
-            self.ignore_index = None
-        elif isinstance(ignore_index, int):
-            self.ignore_index = (ignore_index,)
-        else:
-            try:
-                self.ignore_index = tuple(ignore_index)
-            except TypeError:
-                raise ValueError("'ignore_index' must be an int or iterable")
+        # if ignore_index is None:
+        #     self.ignore_index = None
+        # elif isinstance(ignore_index, int):
+        #     self.ignore_index = (ignore_index,)
+        # else:
+        #     try:
+        #         self.ignore_index = tuple(ignore_index)
+        #     except TypeError:
+        #         raise ValueError("'ignore_index' must be an int or iterable")
 
     def reset(self):
         self.conf_matrix.reset()
@@ -260,9 +260,9 @@ class PixelAccuracy(Metric):
             is the mean Pixel Accuracy.
         """
         conf_matrix = self.conf_matrix.value()
-        if self.ignore_index is not None:
-            conf_matrix[:, self.ignore_index] = 0
-            conf_matrix[self.ignore_index, :] = 0
+        # if self.ignore_index is not None:
+        #     conf_matrix[:, self.ignore_index] = 0
+        #     conf_matrix[self.ignore_index, :] = 0
         true_positive = np.diag(conf_matrix)
         total_pixel_per_class = np.sum(conf_matrix, axis=1)
 
