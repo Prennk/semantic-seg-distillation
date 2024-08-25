@@ -141,7 +141,6 @@ def load_dataset(dataset, args):
     if class_weights is not None:
         if args.ignore_unlabeled and len(class_encoding) != len(class_weights):
             # Remove the weight for 'unlabeled' class
-            ignore_index = list(class_encoding.keys()).index('unlabeled')
             class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
             print(f"[Warning] Removing 'unlabeled' class weight from class weights.")
         print(f"Num of class weights: {len(class_weights)}")
