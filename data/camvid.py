@@ -53,18 +53,37 @@ class CamVid(data.Dataset):
         # ('unlabeled', (0, 0, 0))
     ])
 
+    color_to_label = {
+        (128, 128, 128): 0,  # sky
+        (128, 0, 0): 1,      # building
+        (192, 192, 128): 2,  # pole
+        # (255, 69, 0): 3,   # road_marking
+        (128, 64, 128): 3,   # road
+        (60, 40, 222): 4,    # pavement
+        (128, 128, 0): 5,    # tree
+        (192, 128, 128): 6,  # sign_symbol
+        (64, 64, 128): 7,    # fence
+        (64, 0, 128): 8,     # car
+        (64, 64, 0): 9,      # pedestrian
+        (0, 128, 192): 10,   # bicyclist
+        # (0, 0, 0):11
+    }
+
+
     def __init__(self,
                  root_dir,
                  mode='train',
                  transform=None,
                  label_transform=None,
                  loader=utils.pil_loader,
+                 color_to_label=color_to_label,
                  ignore_index=255):
         self.root_dir = root_dir
         self.mode = mode
         self.transform = transform
         self.label_transform = label_transform
         self.loader = loader
+        self.color_to_label = color_to_label
         self.ignore_index = ignore_index
 
         if self.mode.lower() == 'train':
@@ -131,7 +150,11 @@ class CamVid(data.Dataset):
 
         road_marking_color = (255, 69, 0)
         road_color = (128, 64, 128)
-        label[label == road_marking_color] = road_color
+        road_label = self.color_to_label[road_color]
+        mask = (label == road_marking_color[0]) & \
+           (label == road_marking_color[1]) & \
+           (label == road_marking_color[2])
+        label[mask] = road_label
 
         unlabeled_color = (0, 0, 0)
         label[label == unlabeled_color] = self.ignore_index
