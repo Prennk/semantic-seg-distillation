@@ -150,17 +150,17 @@ class CamVid(data.Dataset):
         if self.label_transform is not None:
             label = self.label_transform(label)
 
+        # Convert label to numpy array
         label_np = np.array(label)
 
-        # Mapping road_marking to road and ignoring unlabeled
-        road_marking_color = (255, 69, 0)
-        road_color = (128, 64, 128)
-        road_label = self.color_to_label[road_color]
+        # Assuming the label is already in the indexed format (single channel)
+        road_marking_index = self.color_to_label[(255, 69, 0)]  # Road marking index
+        road_index = self.color_to_label[(128, 64, 128)]        # Road index
 
-        mask = np.all(label_np == road_marking_color, axis=-1)
-        label_np[mask] = road_label
+        # Replace road_marking_index with road_index
+        label_np[label_np == road_marking_index] = road_index
 
-        # Convert any pixel not in color_encoding to ignore_index
+        # Convert any pixel not in valid range to ignore_index
         valid_labels = list(self.color_to_label.values()) + [self.ignore_index]
         label_np = np.where(np.isin(label_np, valid_labels, invert=True), self.ignore_index, label_np)
 
