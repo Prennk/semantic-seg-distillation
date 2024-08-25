@@ -112,10 +112,13 @@ def load_dataset(dataset, args):
 
     if class_weights is not None:
         class_weights = torch.from_numpy(class_weights).float().to(args.device)
-        # Set the weight of the unlabeled class to 0
+        # Remove the 'unlabeled' class if present
         if args.ignore_unlabeled:
-            ignore_index = list(class_encoding).index('unlabeled')
-            class_weights[ignore_index] = 0
+            if 'unlabeled' in class_encoding:
+                ignore_index = list(class_encoding.keys()).index('unlabeled')
+                class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
+                del class_encoding['unlabeled']
+                print(f"[Warning] Removing 'unlabeled' class and updating class weights.")
 
     print("Class weights:", class_weights)
 
