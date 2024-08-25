@@ -52,6 +52,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"\nCreating model: {args.model}")
 
     num_classes = len(class_encoding)
+    print(f"num classes: {num_classes}")
 
     # Intialize model
     if args.model == 'enet':
@@ -144,6 +145,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
 
 def distill(train_loader, val_loader, class_weights, class_encoding, args):
     num_classes = len(class_encoding)
+    print(f"num classes: {num_classes}")
 
     # create teacher
     print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")

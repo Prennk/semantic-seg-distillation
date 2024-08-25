@@ -67,12 +67,6 @@ def load_dataset(dataset, args):
             del class_encoding['road_marking']
             print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
 
-    # Remove the 'unlabeled' class from the encoding if needed
-    if args.ignore_unlabeled:
-        if 'unlabeled' in class_encoding:
-            del class_encoding['unlabeled']
-            print(f"[Info] 'unlabeled' class has been removed from class encoding.")
-
     # Get number of classes to predict
     num_classes = len(class_encoding)
 
@@ -113,11 +107,15 @@ def load_dataset(dataset, args):
 
     if class_weights is not None:
         class_weights = torch.from_numpy(class_weights).float().to(args.device)
-        if args.ignore_unlabeled and 'unlabeled' in class_encoding:
+        if args.ignore_unlabeled:
             # Remove the weight for 'unlabeled' class
             ignore_index = list(class_encoding.keys()).index('unlabeled')
             class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
             print(f"[Warning] Removing 'unlabeled' class weight from class weights.")
+            # Remove the 'unlabeled' class from the encoding
+            del class_encoding['unlabeled']
+            print(f"[Info] 'unlabeled' class has been removed from class encoding.")
+                
 
     print("Class weights:", class_weights)
 
