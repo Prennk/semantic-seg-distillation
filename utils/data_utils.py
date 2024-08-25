@@ -11,7 +11,7 @@ def remove_unlabeled(label_tensor, unlabeled_value):
     """Remove the 'unlabeled' class from the label tensor."""
     # Set pixels with the 'unlabeled' value to a value outside valid range (e.g., -1)
     mask = label_tensor == unlabeled_value
-    label_tensor[mask] = -1  # Assuming -1 is outside the valid range of class indices
+    label_tensor[mask] = -2  # Assuming -1 is outside the valid range of class indices
     return label_tensor
 
 def merge_road_marking(label_tensor, road_marking_value, road_value):
@@ -136,7 +136,7 @@ def load_dataset(dataset, args):
     class_weights = None
     if args.weighing:
         if args.weighing.lower() == 'enet':
-            class_weights = enet_weighing(train_loader, num_classes)
+            class_weights = enet_weighing(train_loader, num_classes, ignore_index=-1)
         elif args.weighing.lower() == 'mfb':
             class_weights = median_freq_balancing(train_loader, num_classes)
 
@@ -145,3 +145,23 @@ def load_dataset(dataset, args):
         print("Class weights:", class_weights)
 
     return (train_loader, val_loader, test_loader), class_weights, class_encoding
+
+# Update fungsi enet_weighing di utils/data/utils.py
+def enet_weighing(dataloader, num_classes, ignore_index=None):
+    """Computes the class weights using ENet's weighing method."""
+    class_count = 0
+    total = 0
+
+    for _, label in dataloader:
+        # Flatten label tensor and filter out 'ignore_index' if specified
+        flat_label = label.view(-1)
+        if ignore_index is not None:
+            flat_label = flat_label[flat_label != ignore_index]
+
+        # Compute class frequencies
+        class_count += np.bincount(flat_label.cpu().numpy(), minlength=num_classes)
+        total += flat_label.size(0)
+
+    # Compute class weights
+    class_weights = 1 / (class_count / total)
+    return class_weights
