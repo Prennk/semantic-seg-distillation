@@ -3,22 +3,14 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 from utils.transforms import PILToLongTensor, LongTensorToRGBPIL
 from PIL import Image
-import numpy as np
 
 from utils.utils import batch_transform, imshow_batch
 from data.utils import enet_weighing, median_freq_balancing
 
-def remove_unlabeled(label_tensor, unlabeled_value):
-    """Remove the 'unlabeled' class from the label tensor."""
-    # Set pixels with the 'unlabeled' value to a value outside valid range (e.g., -1)
-    mask = label_tensor == unlabeled_value
-    label_tensor[mask] = -2  # Assuming -1 is outside the valid range of class indices
-    return label_tensor
-
-def merge_road_marking(label_tensor, road_marking_value, road_value):
-    """Merge 'road_marking' class with 'road' class in the label tensor."""
-    mask = label_tensor == road_marking_value
-    label_tensor[mask] = road_value  # Replace 'road_marking' class with 'road' class value
+def remove_unlabeled(label_tensor, unlabeled_value, num_classes):
+    """Remove the 'unlabeled' class from the label tensor by setting it to a new default value."""
+    new_value = num_classes  # New value should be out of the valid class range
+    label_tensor[label_tensor == unlabeled_value] = new_value
     return label_tensor
 
 def load_dataset(dataset, args):
@@ -27,45 +19,37 @@ def load_dataset(dataset, args):
     print("Dataset directory:", args.dataset_dir)
     print("Save directory:", args.save_dir)
 
+    temp_image_transform = transforms.Compose(
+        [transforms.Resize((args.height, args.width)),
+         transforms.ToTensor()])
+
+    temp_label_transform = transforms.Compose([
+        transforms.Resize((args.height, args.width), Image.NEAREST),
+        PILToLongTensor()])
+
+    temp_train_set = dataset(
+        args.dataset_dir,
+        transform=temp_image_transform,
+        label_transform=temp_label_transform)
+
+    # Get encoding between pixel values in label images and RGB colors
+    class_encoding = temp_train_set.color_encoding
+    unlabeled_index = None
+
+    if args.ignore_unlabeled and 'unlabeled' in class_encoding:
+        unlabeled_index = list(class_encoding.keys()).index('unlabeled')
+        del class_encoding['unlabeled']
+        print(f"[Info] 'unlabeled' class has been removed from class encoding.")
+
     image_transform = transforms.Compose(
         [transforms.Resize((args.height, args.width)),
          transforms.ToTensor()])
 
-    # Tentukan nilai untuk 'unlabeled' jika ada di class_encoding
-    unlabeled_value = None
-    road_marking_value = None
-    road_value = None
-
-    # Load dataset sementara untuk mendapatkan encoding
-    temp_dataset = dataset(args.dataset_dir)
-    class_encoding = temp_dataset.color_encoding
-
-    # Menghapus dan menggabungkan kelas sesuai dengan dataset
-    if args.dataset.lower() == 'camvid':
-        if 'road_marking' in class_encoding and 'road' in class_encoding:
-            road_marking_value = list(class_encoding).index('road_marking')
-            road_value = list(class_encoding).index('road')
-            del class_encoding['road_marking']
-            print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
-
-    # Jika 'unlabeled' ada di class encoding, tentukan nilai tensor-nya
-    if 'unlabeled' in class_encoding:
-        unlabeled_value = list(class_encoding).index('unlabeled')
-        del class_encoding['unlabeled']
-        print(f"[Info] 'unlabeled' class has been removed from class encoding.")
-
-    # Update transformasi label untuk menghapus kelas 'unlabeled' dan menggabungkan kelas 'road_marking' dengan 'road'
-    def label_processing_pipeline(label):
-        if unlabeled_value is not None:
-            label = remove_unlabeled(label, unlabeled_value)
-        if road_marking_value is not None and road_value is not None:
-            label = merge_road_marking(label, road_marking_value, road_value)
-        return label
-
+    num_classes = len(class_encoding)
     label_transform = transforms.Compose([
         transforms.Resize((args.height, args.width), Image.NEAREST),
         PILToLongTensor(),
-        transforms.Lambda(label_processing_pipeline)
+        transforms.Lambda(lambda label: remove_unlabeled(label, unlabeled_index, num_classes) if unlabeled_index is not None else label)
     ])
 
     # Load the training set as tensors
@@ -103,8 +87,11 @@ def load_dataset(dataset, args):
         shuffle=False,
         num_workers=args.workers)
 
-    # Get number of classes to predict
-    num_classes = len(class_encoding)
+    # Remove the road_marking class from the CamVid dataset as it's merged with the road class
+    if args.dataset.lower() == 'camvid':
+        if 'road_marking' in class_encoding:
+            del class_encoding['road_marking']
+            print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
 
     # Print information for debugging
     print("Number of classes to predict:", num_classes)
@@ -137,7 +124,7 @@ def load_dataset(dataset, args):
     class_weights = None
     if args.weighing:
         if args.weighing.lower() == 'enet':
-            class_weights = enet_weighing(train_loader, num_classes, ignore_index=-2)
+            class_weights = enet_weighing(train_loader, num_classes)
         elif args.weighing.lower() == 'mfb':
             class_weights = median_freq_balancing(train_loader, num_classes)
 
@@ -146,23 +133,3 @@ def load_dataset(dataset, args):
         print("Class weights:", class_weights)
 
     return (train_loader, val_loader, test_loader), class_weights, class_encoding
-
-# Update fungsi enet_weighing di utils/data/utils.py
-def enet_weighing(dataloader, num_classes, ignore_index=None):
-    """Computes the class weights using ENet's weighing method."""
-    class_count = 0
-    total = 0
-
-    for _, label in dataloader:
-        # Flatten label tensor and filter out 'ignore_index' if specified
-        flat_label = label.view(-1)
-        if ignore_index is not None:
-            flat_label = flat_label[flat_label != ignore_index]
-
-        # Compute class frequencies
-        class_count += np.bincount(flat_label.cpu().numpy(), minlength=num_classes)
-        total += flat_label.size(0)
-
-    # Compute class weights
-    class_weights = 1 / (class_count / total)
-    return class_weights
