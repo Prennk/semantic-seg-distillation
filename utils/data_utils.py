@@ -7,6 +7,13 @@ from PIL import Image
 from utils.utils import batch_transform, imshow_batch
 from data.utils import enet_weighing, median_freq_balancing
 
+def remove_unlabeled(label_tensor, unlabeled_value):
+    """Remove the 'unlabeled' class from the label tensor."""
+    # Set pixels with the 'unlabeled' value to a value outside valid range (e.g., -2)
+    mask = label_tensor == unlabeled_value
+    label_tensor[mask] = -2 
+    return label_tensor
+
 def load_dataset(dataset, args):
     print("Loading dataset...")
     print("Selected dataset:", args.dataset)
@@ -15,11 +22,26 @@ def load_dataset(dataset, args):
 
     image_transform = transforms.Compose(
         [transforms.Resize((args.height, args.width)),
-        transforms.ToTensor()])
+         transforms.ToTensor()])
 
+    # Tentukan nilai untuk 'unlabeled' jika ada di class_encoding
+    unlabeled_value = None
+
+    # Load dataset untuk mendapatkan encoding
+    temp_dataset = dataset(args.dataset_dir)
+    class_encoding = temp_dataset.color_encoding
+
+    # Jika 'unlabeled' ada di class encoding, tentukan nilai tensor-nya
+    if 'unlabeled' in class_encoding:
+        unlabeled_value = list(class_encoding).index('unlabeled')
+        del class_encoding['unlabeled']
+        print(f"[Info] 'unlabeled' class has been removed from class encoding.")
+
+    # Update transformasi label untuk menghapus kelas 'unlabeled'
     label_transform = transforms.Compose([
         transforms.Resize((args.height, args.width), Image.NEAREST),
-        PILToLongTensor()
+        PILToLongTensor(),
+        transforms.Lambda(lambda label: remove_unlabeled(label, unlabeled_value) if unlabeled_value is not None else label)
     ])
 
     # Load the training set as tensors
@@ -56,23 +78,6 @@ def load_dataset(dataset, args):
         batch_size=args.batch_size,
         shuffle=False,
         num_workers=args.workers)
-
-    # Get encoding between pixel values in label images and RGB colors
-    class_encoding = train_set.color_encoding
-
-    # Remove the road_marking class from the CamVid dataset as it's merged
-    # with the road class
-    if args.dataset.lower() == 'camvid':
-        if 'road_marking' in class_encoding:
-            del class_encoding['road_marking']
-            print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
-
-    # Save the index of 'unlabeled' class before removing it
-    unlabeled_index = None
-    if args.ignore_unlabeled and 'unlabeled' in class_encoding:
-        unlabeled_index = list(class_encoding.keys()).index('unlabeled')
-        del class_encoding['unlabeled']
-        print(f"[Info] 'unlabeled' class has been removed from class encoding.")
 
     # Get number of classes to predict
     num_classes = len(class_encoding)
@@ -114,11 +119,6 @@ def load_dataset(dataset, args):
 
     if class_weights is not None:
         class_weights = torch.from_numpy(class_weights).float().to(args.device)
-        if args.ignore_unlabeled and unlabeled_index is not None:
-            # Remove the weight for 'unlabeled' class using the saved index
-            class_weights = torch.cat((class_weights[:unlabeled_index], class_weights[unlabeled_index+1:]), dim=0)
-            print(f"[Warning] Removed 'unlabeled' class weight from class weights.")
-
-    print("Class weights:", class_weights)
+        print("Class weights:", class_weights)
 
     return (train_loader, val_loader, test_loader), class_weights, class_encoding
