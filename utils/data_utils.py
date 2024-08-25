@@ -7,51 +7,22 @@ from PIL import Image
 from utils.utils import batch_transform, imshow_batch
 from data.utils import enet_weighing, median_freq_balancing
 
-def remove_unlabeled(label_tensor, unlabeled_value, num_classes):
-    """Remove the 'unlabeled' class from the label tensor by setting it to a new default value."""
-    new_value = num_classes  # New value should be out of the valid class range
-    label_tensor[label_tensor == unlabeled_value] = new_value
-    return label_tensor
-
 def load_dataset(dataset, args):
     print("Loading dataset...")
     print("Selected dataset:", args.dataset)
     print("Dataset directory:", args.dataset_dir)
     print("Save directory:", args.save_dir)
 
-    temp_image_transform = transforms.Compose(
-        [transforms.Resize((args.height, args.width)),
-         transforms.ToTensor()])
-
-    temp_label_transform = transforms.Compose([
-        transforms.Resize((args.height, args.width), Image.NEAREST),
-        PILToLongTensor()])
-
-    temp_train_set = dataset(
-        args.dataset_dir,
-        transform=temp_image_transform,
-        label_transform=temp_label_transform)
-
-    # Get encoding between pixel values in label images and RGB colors
-    class_encoding = temp_train_set.color_encoding
-    unlabeled_index = None
-
-    if args.ignore_unlabeled and 'unlabeled' in class_encoding:
-        unlabeled_index = list(class_encoding.keys()).index('unlabeled')
-        del class_encoding['unlabeled']
-        print(f"[Info] 'unlabeled' class has been removed from class encoding.")
-
     image_transform = transforms.Compose(
         [transforms.Resize((args.height, args.width)),
-         transforms.ToTensor()])
+        transforms.ToTensor()])
 
-    num_classes = len(class_encoding)
     label_transform = transforms.Compose([
         transforms.Resize((args.height, args.width), Image.NEAREST),
-        PILToLongTensor(),
-        transforms.Lambda(lambda label: remove_unlabeled(label, unlabeled_index, num_classes) if unlabeled_index is not None else label)
+        PILToLongTensor()
     ])
 
+    # Get selected dataset
     # Load the training set as tensors
     train_set = dataset(
         args.dataset_dir,
@@ -87,11 +58,18 @@ def load_dataset(dataset, args):
         shuffle=False,
         num_workers=args.workers)
 
-    # Remove the road_marking class from the CamVid dataset as it's merged with the road class
+    # Get encoding between pixel valus in label images and RGB colors
+    class_encoding = train_set.color_encoding
+
+    # Remove the road_marking class from the CamVid dataset as it's merged
+    # with the road class
     if args.dataset.lower() == 'camvid':
         if 'road_marking' in class_encoding:
             del class_encoding['road_marking']
             print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
+
+    # Get number of classes to predict
+    num_classes = len(class_encoding)
 
     # Print information for debugging
     print("Number of classes to predict:", num_classes)
@@ -121,20 +99,26 @@ def load_dataset(dataset, args):
     print("Weighing technique:", args.weighing)
     print("Computing class weights...")
     print("(this can take a while depending on the dataset size)")
-    class_weights = None
+    class_weights = 0
     if args.weighing:
         if args.weighing.lower() == 'enet':
             class_weights = enet_weighing(train_loader, num_classes)
         elif args.weighing.lower() == 'mfb':
             class_weights = median_freq_balancing(train_loader, num_classes)
+        else:
+            class_weights = None
+    else:
+        class_weights = None
 
     if class_weights is not None:
         class_weights = torch.from_numpy(class_weights).float().to(args.device)
-        if args.ignore_unlabeled and unlabeled_index is not None:
-            # Remove the weight for 'unlabeled' class using the saved index
-            class_weights = torch.cat((class_weights[:unlabeled_index], class_weights[unlabeled_index+1:]), dim=0)
-            print(f"[Warning] Removed 'unlabeled' class weight from class weights.")
+        # Set the weight of the unlabeled class to 0
+        if args.ignore_unlabeled:
+            ignore_index = list(class_encoding).index('unlabeled')
+            class_weights[ignore_index] = 0
 
     print("Class weights:", class_weights)
 
-    return (train_loader, val_loader, test_loader), class_weights, class_encoding
+    return (train_loader, val_loader,
+            test_loader), class_weights, class_encoding
+    
