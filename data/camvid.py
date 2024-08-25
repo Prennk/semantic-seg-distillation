@@ -1,5 +1,7 @@
 import os
+import numpy as np
 from collections import OrderedDict
+import torch
 import torch.utils.data as data
 from . import utils
 
@@ -148,16 +150,23 @@ class CamVid(data.Dataset):
         if self.label_transform is not None:
             label = self.label_transform(label)
 
+        label_np = np.array(label)
+
+        # Mapping road_marking to road and ignoring unlabeled
         road_marking_color = (255, 69, 0)
         road_color = (128, 64, 128)
         road_label = self.color_to_label[road_color]
-        mask = (label == road_marking_color[0]) & \
-           (label == road_marking_color[1]) & \
-           (label == road_marking_color[2])
-        label[mask] = road_label
 
-        unlabeled_color = (0, 0, 0)
-        label[label == unlabeled_color] = self.ignore_index
+        mask = np.all(label_np == road_marking_color, axis=-1)
+        label_np[mask] = road_label
+
+        # Convert any pixel not in color_encoding to ignore_index
+        valid_labels = list(self.color_to_label.values()) + [self.ignore_index]
+        label_np = np.where(np.isin(label_np, valid_labels, invert=True), self.ignore_index, label_np)
+
+        # Convert back to torch tensor
+        label = torch.from_numpy(label_np).long()
+
 
         return img, label
 
