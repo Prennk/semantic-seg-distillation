@@ -20,8 +20,13 @@ def load_dataset(dataset, args):
     print("Dataset directory:", args.dataset_dir)
     print("Save directory:", args.save_dir)
 
+    temp_train_set = dataset(
+        args.dataset_dir,
+        transform=image_transform,
+        label_transform=label_transform)
+
     # Get encoding between pixel values in label images and RGB colors
-    class_encoding = train_set.color_encoding
+    class_encoding = temp_train_set.color_encoding
     unlabeled_index = list(class_encoding.keys()).index('unlabeled')
 
     image_transform = transforms.Compose(
