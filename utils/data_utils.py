@@ -22,7 +22,6 @@ def load_dataset(dataset, args):
         PILToLongTensor()
     ])
 
-    # Get selected dataset
     # Load the training set as tensors
     train_set = dataset(
         args.dataset_dir,
@@ -58,7 +57,7 @@ def load_dataset(dataset, args):
         shuffle=False,
         num_workers=args.workers)
 
-    # Get encoding between pixel valus in label images and RGB colors
+    # Get encoding between pixel values in label images and RGB colors
     class_encoding = train_set.color_encoding
 
     # Remove the road_marking class from the CamVid dataset as it's merged
@@ -67,6 +66,12 @@ def load_dataset(dataset, args):
         if 'road_marking' in class_encoding:
             del class_encoding['road_marking']
             print(f"[Warning] Deleting 'road_marking' class because it is combined with 'road' class")
+
+    # Remove the 'unlabeled' class from the encoding if needed
+    if args.ignore_unlabeled:
+        if 'unlabeled' in class_encoding:
+            del class_encoding['unlabeled']
+            print(f"[Info] 'unlabeled' class has been removed from class encoding.")
 
     # Get number of classes to predict
     num_classes = len(class_encoding)
@@ -99,29 +104,21 @@ def load_dataset(dataset, args):
     print("Weighing technique:", args.weighing)
     print("Computing class weights...")
     print("(this can take a while depending on the dataset size)")
-    class_weights = 0
+    class_weights = None
     if args.weighing:
         if args.weighing.lower() == 'enet':
             class_weights = enet_weighing(train_loader, num_classes)
         elif args.weighing.lower() == 'mfb':
             class_weights = median_freq_balancing(train_loader, num_classes)
-        else:
-            class_weights = None
-    else:
-        class_weights = None
 
     if class_weights is not None:
         class_weights = torch.from_numpy(class_weights).float().to(args.device)
-        # Remove the 'unlabeled' class if present
-        if args.ignore_unlabeled:
-            if 'unlabeled' in class_encoding:
-                ignore_index = list(class_encoding.keys()).index('unlabeled')
-                class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
-                del class_encoding['unlabeled']
-                print(f"[Warning] Removing 'unlabeled' class and updating class weights.")
+        if args.ignore_unlabeled and 'unlabeled' in class_encoding:
+            # Remove the weight for 'unlabeled' class
+            ignore_index = list(class_encoding.keys()).index('unlabeled')
+            class_weights = torch.cat((class_weights[:ignore_index], class_weights[ignore_index+1:]), dim=0)
+            print(f"[Warning] Removing 'unlabeled' class weight from class weights.")
 
     print("Class weights:", class_weights)
 
-    return (train_loader, val_loader,
-            test_loader), class_weights, class_encoding
-    
+    return (train_loader, val_loader, test_loader), class_weights, class_encoding
