@@ -78,12 +78,12 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     lr_updater = optim.lr_scheduler.LambdaLR(optimizer, lambda_lr)
 
     # Evaluation metric
-    # if args.ignore_unlabeled:
-    #     ignore_index = list(class_encoding).index('unlabeled')
-    # else:
-    ignore_index = None
-    metric_iou = metrics.IoU(num_classes, ignore_index=ignore_index)
-    metric_pa = metrics.PixelAccuracy(num_classes, ignore_index=ignore_index)
+    if args.ignore_unlabeled:
+        ignore_index = list(class_encoding).index('unlabeled')
+    else:
+        ignore_index = None
+    metric_iou = metrics.IoU(num_classes)
+    metric_pa = metrics.PixelAccuracy(num_classes)
 
     # Optionally resume from a checkpoint
     if args.resume:
