@@ -1,25 +1,25 @@
 import os
 from collections import OrderedDict
 import torch.utils.data as data
-from . import utils
 import numpy as np
+from PIL import Image
+from . import utils
 
 class CamVid(data.Dataset):
     """CamVid dataset loader where the dataset is arranged as in
     https://github.com/alexgkendall/SegNet-Tutorial/tree/master/CamVid.
-
-
+    
     Keyword arguments:
     - root_dir (``string``): Root directory path.
     - mode (``string``): The type of dataset: 'train' for training set, 'val'
     for validation set, and 'test' for test set.
-    - transform (``callable``, optional): A function/transform that  takes in
+    - transform (``callable``, optional): A function/transform that takes in
     an PIL image and returns a transformed version. Default: None.
     - label_transform (``callable``, optional): A function/transform that takes
     in the target and transforms it. Default: None.
     - loader (``callable``, optional): A function to load an image given its
     path. By default ``default_loader`` is used.
-
+    
     """
     # Training dataset root folders
     train_folder = 'train'
@@ -59,13 +59,13 @@ class CamVid(data.Dataset):
                  transform=None,
                  label_transform=None,
                  loader=utils.pil_loader,
-                 ignore_label=-1):
+                 ignore_label=-1):  # Tambahkan ignore_label sebagai argumen
         self.root_dir = root_dir
         self.mode = mode
         self.transform = transform
         self.label_transform = label_transform
         self.loader = loader
-        self.ignore_label = ignore_label
+        self.ignore_label = ignore_label  # Inisialisasi ignore_label
 
         if self.mode.lower() == 'train':
             # Get the training data and labels filepaths
@@ -98,17 +98,6 @@ class CamVid(data.Dataset):
             raise RuntimeError("Unexpected dataset mode. "
                                "Supported modes are: train, val and test")
 
-    def encode_target(self, label):
-        label = np.array(label)
-        label_copy = np.zeros(label.shape[:2], dtype=int)
-
-        for k, v in self.color_encoding.items():
-            match = np.all(label == v, axis=-1)
-            label_copy[match] = self.ignore_label if k == 'unlabeled' else list(self.color_encoding.keys()).index(k)
-
-        return label_copy
-
-
     def __getitem__(self, index):
         """
         Args:
@@ -134,13 +123,29 @@ class CamVid(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        # Transform the label
-        label = self.encode_target(label)
-
         if self.label_transform is not None:
             label = self.label_transform(label)
 
+        # Terapkan ignore label
+        label = self.apply_ignore_label(label)
+
         return img, label
+
+    def apply_ignore_label(self, label):
+        """Mengubah piksel dengan warna 'unlabeled' menjadi ignore_label."""
+        unlabeled_color = self.color_encoding['unlabeled']
+        ignore_label = self.ignore_label
+
+        label_copy = label.copy()
+        label_np = np.array(label_copy)
+        
+        mask = (label_np[:, :, 0] == unlabeled_color[0]) & \
+               (label_np[:, :, 1] == unlabeled_color[1]) & \
+               (label_np[:, :, 2] == unlabeled_color[2])
+        
+        label_np[mask] = ignore_label
+
+        return Image.fromarray(label_np)
 
     def __len__(self):
         """Returns the length of the dataset."""
