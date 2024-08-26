@@ -480,7 +480,7 @@ class _ASPP(nn.Module):
 def get_deeplabv3(backbone, num_classes, args, local_rank=None, pretrained=False,
                   pretrained_base=False):
 
-    model = DeepLabV3(num_classes, backbone=backbone, local_rank=local_rank, pretrained_base=pretrained_base).to(args.device)
+    model = DeepLabV3(num_classes=11, backbone=backbone, local_rank=local_rank, pretrained_base=pretrained_base).to(args.device)
     if pretrained:
         print(f"Loading deeplabv3_resnet101_cirkd.pth.....")
         model.load_state_dict(torch.load('deeplabv3_resnet101_cirkd.pth', map_location=torch.device(args.device)))
