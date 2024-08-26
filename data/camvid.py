@@ -2,7 +2,7 @@ import os
 from collections import OrderedDict
 import torch.utils.data as data
 from . import utils
-
+import numpy as np
 
 class CamVid(data.Dataset):
     """CamVid dataset loader where the dataset is arranged as in
@@ -58,12 +58,14 @@ class CamVid(data.Dataset):
                  mode='train',
                  transform=None,
                  label_transform=None,
-                 loader=utils.pil_loader):
+                 loader=utils.pil_loader,
+                 ignore_label=-1):
         self.root_dir = root_dir
         self.mode = mode
         self.transform = transform
         self.label_transform = label_transform
         self.loader = loader
+        self.ignore_label = ignore_label
 
         if self.mode.lower() == 'train':
             # Get the training data and labels filepaths
@@ -96,6 +98,13 @@ class CamVid(data.Dataset):
             raise RuntimeError("Unexpected dataset mode. "
                                "Supported modes are: train, val and test")
 
+    def encode_target(self, label):
+        """Encode label images as class indices."""
+        label_copy = np.array(label)
+        for k, v in self.color_encoding.items():
+            label_copy[(label == v).all(axis=-1)] = self.ignore_label if k == 'unlabeled' else list(self.color_encoding.keys()).index(k)
+        return label_copy
+
     def __getitem__(self, index):
         """
         Args:
@@ -107,14 +116,11 @@ class CamVid(data.Dataset):
 
         """
         if self.mode.lower() == 'train':
-            data_path, label_path = self.train_data[index], self.train_labels[
-                index]
+            data_path, label_path = self.train_data[index], self.train_labels[index]
         elif self.mode.lower() == 'val':
-            data_path, label_path = self.val_data[index], self.val_labels[
-                index]
+            data_path, label_path = self.val_data[index], self.val_labels[index]
         elif self.mode.lower() == 'test':
-            data_path, label_path = self.test_data[index], self.test_labels[
-                index]
+            data_path, label_path = self.test_data[index], self.test_labels[index]
         else:
             raise RuntimeError("Unexpected dataset mode. "
                                "Supported modes are: train, val and test")
@@ -123,6 +129,9 @@ class CamVid(data.Dataset):
 
         if self.transform is not None:
             img = self.transform(img)
+
+        # Transform the label
+        label = self.encode_target(label)
 
         if self.label_transform is not None:
             label = self.label_transform(label)
