@@ -132,17 +132,14 @@ class CamVid(data.Dataset):
         return img, label
 
     def apply_ignore_label(self, label):
-        """Mengubah piksel dengan warna 'unlabeled' menjadi ignore_label."""
         unlabeled_color = torch.tensor(self.color_encoding['unlabeled'], dtype=torch.uint8)
-
-        # Jika label adalah gambar PIL, ubah menjadi tensor terlebih dahulu
         if not isinstance(label, torch.Tensor):
             label = torch.from_numpy(np.array(label))
 
-        # Buat masker untuk piksel yang sesuai dengan warna 'unlabeled'
-        mask = (label == unlabeled_color).all(dim=-1)
+        if label.dim() == 2:
+            label = label.unsqueeze(-1).repeat(1, 1, 3)
 
-        # Setel piksel dengan warna 'unlabeled' ke nilai ignore_label
+        mask = (label == unlabeled_color).all(dim=-1)
         label[mask] = self.ignore_label
 
         return label
