@@ -58,7 +58,7 @@ def main():
 
     if args.model == 'enet':
         model = Create_ENet(num_classes).to(args.device)
-    elif args.model == "deeplabv3_resnet101":
+    elif args.model == "deeplabv3_torch":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
     elif args.model == "deeplabv3_cirkd":
         model = get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args).to(args.device)
