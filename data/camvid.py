@@ -99,11 +99,15 @@ class CamVid(data.Dataset):
                                "Supported modes are: train, val and test")
 
     def encode_target(self, label):
-        """Encode label images as class indices."""
-        label_copy = np.array(label)
+        label = np.array(label)
+        label_copy = np.zeros(label.shape[:2], dtype=int)
+
         for k, v in self.color_encoding.items():
-            label_copy[(label == v).all(axis=-1)] = self.ignore_label if k == 'unlabeled' else list(self.color_encoding.keys()).index(k)
+            match = np.all(label == v, axis=-1)
+            label_copy[match] = self.ignore_label if k == 'unlabeled' else list(self.color_encoding.keys()).index(k)
+
         return label_copy
+
 
     def __getitem__(self, index):
         """
