@@ -2,7 +2,7 @@ import os
 from collections import OrderedDict
 import torch.utils.data as data
 import numpy as np
-from PIL import Image
+import torch
 from . import utils
 
 class CamVid(data.Dataset):
@@ -133,19 +133,19 @@ class CamVid(data.Dataset):
 
     def apply_ignore_label(self, label):
         """Mengubah piksel dengan warna 'unlabeled' menjadi ignore_label."""
-        unlabeled_color = self.color_encoding['unlabeled']
-        ignore_label = self.ignore_label
+        unlabeled_color = torch.tensor(self.color_encoding['unlabeled'], dtype=torch.uint8)
 
-        label_copy = label.copy()
-        label_np = np.array(label_copy)
-        
-        mask = (label_np[:, :, 0] == unlabeled_color[0]) & \
-               (label_np[:, :, 1] == unlabeled_color[1]) & \
-               (label_np[:, :, 2] == unlabeled_color[2])
-        
-        label_np[mask] = ignore_label
+        # Jika label adalah gambar PIL, ubah menjadi tensor terlebih dahulu
+        if not isinstance(label, torch.Tensor):
+            label = torch.from_numpy(np.array(label))
 
-        return Image.fromarray(label_np)
+        # Buat masker untuk piksel yang sesuai dengan warna 'unlabeled'
+        mask = (label == unlabeled_color).all(dim=-1)
+
+        # Setel piksel dengan warna 'unlabeled' ke nilai ignore_label
+        label[mask] = self.ignore_label
+
+        return label
 
     def __len__(self):
         """Returns the length of the dataset."""
