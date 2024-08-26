@@ -61,7 +61,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     elif args.model == "deeplabv3_torch":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
     elif args.model == "deeplabv3_cirkd":
-        args.model == get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args)
+        args.model == get_deeplabv3(num_classes=num_classes+1, backbone="resnet101", pretrained=True, args=args)
     else:
         raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
 
