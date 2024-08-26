@@ -8,6 +8,7 @@ from torchinfo import summary
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
+from model.deeplabv3_custom import get_deeplabv3
 
 parser = ArgumentParser()
 parser.add_argument('--config', type=str, default='config.yaml', help='Path to the config file')
@@ -59,6 +60,9 @@ def main():
         model = Create_ENet(num_classes).to(args.device)
     elif args.model == "deeplabv3_resnet101":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
+    elif args.model == "deeplabv3_cirkd":
+        model = get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args).to(args.device)
+
     else:
         raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
 
