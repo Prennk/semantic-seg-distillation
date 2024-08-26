@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from collections import OrderedDict
+import torch.nn.functional as F
 
 __all__ = ['ResNetV1b', 'resnet18_v1b', 'resnet50_v1b',
            'resnet101_v1b', 'resnet18_v1s', 'resnet50_v1s', 'resnet101_v1s']
@@ -357,6 +358,7 @@ class DeepLabV3(SegBaseModel):
 
         if self.aux:
             auxout = self.auxlayer(c3)
+            auxout = F.interpolate(auxout, size, mode='bilinear', align_corners=True)
 
         return OrderedDict([
             ('out', x),
