@@ -15,6 +15,7 @@ import wandb # type: ignore
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
+from model.deeplabv3_custom import get_deeplabv3
 from distiller.vid import VIDLoss
 from inference import main as inference
 
@@ -57,8 +58,10 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     # Intialize model
     if args.model == 'enet':
         model = Create_ENet(num_classes).to(args.device)
-    elif args.model == "deeplabv3_resnet101":
+    elif args.model == "deeplabv3_torch":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
+    elif args.model == "deeplabv3_cirkd":
+        args.model == get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True)
     else:
         raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
 
@@ -341,6 +344,7 @@ if __name__ == '__main__':
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch + 1}")
         inference()
+
 
     elapsed_end_time = timer()
     print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
