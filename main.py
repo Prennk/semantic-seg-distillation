@@ -61,7 +61,7 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     elif args.model == "deeplabv3_torch":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
     elif args.model == "deeplabv3_cirkd":
-        args.model == get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True)
+        args.model == get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args)
     else:
         raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
 
@@ -344,7 +344,6 @@ if __name__ == '__main__':
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch + 1}")
         inference()
-
 
     elapsed_end_time = timer()
     print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
