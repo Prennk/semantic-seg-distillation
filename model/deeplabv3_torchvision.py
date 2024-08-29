@@ -6,7 +6,7 @@ class Create_DeepLabV3(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):
         super(Create_DeepLabV3, self).__init__()
         print(f"Preparing model: {args.model}...")
-        if args.mode in ["train", "test"]:
+        if args.mode in ["train", "test", "distill"]:
             if args.pretrained:
                 print("Loading pretrained ResNet101_Weights.IMAGENET1K_V2...")
                 weights_backbone = models.ResNet101_Weights.IMAGENET1K_V2
@@ -16,8 +16,6 @@ class Create_DeepLabV3(nn.Module):
                 weights_backbone = None
             else:
                 raise ValueError(f"Unknown pretrained command: {args.pretrained}")
-        elif args.mode == "distill":
-            print("Preparing model as teacher for distillation...")
         else:
             raise ValueError(f"Unknown argument {args.mode}")
         

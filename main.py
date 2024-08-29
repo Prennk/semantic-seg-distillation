@@ -303,6 +303,10 @@ def predict(model, images, class_encoding, epoch):
 # Run only if this module is being run directly
 if __name__ == '__main__':
     elapsed_start_time = timer()
+    if args.mode.lower() == "distill":
+        print(f"Teacher Result:")
+        inference(mode=args.mode)
+        print()
 
     # seed everything
     torch.manual_seed(args.seed)
@@ -341,7 +345,6 @@ if __name__ == '__main__':
         inference()
 
     if args.mode.lower() == "distill":
-        inference(mode=args.mode)
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch + 1}")
         inference()
