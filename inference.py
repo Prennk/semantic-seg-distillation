@@ -49,7 +49,7 @@ def test(model, test_loader, class_weights, class_encoding):
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
         print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
-def main(mode="distill"):
+def main(mode="train"):
     print("starting inference...")
     from data.camvid import CamVid as dataset
 
