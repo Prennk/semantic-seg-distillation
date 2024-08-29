@@ -73,7 +73,7 @@ def main(mode="train"):
     elif mode == "distill":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
         optimizer = optim.SGD(model.parameters(), lr=0.01)
-        model = utils.load_checkpoint(model, optimizer, args.save_dir,
+        model = utils.load_checkpoint(model, optimizer, args.teacher_path,
                             args.name)[0]
     else:
         print(f"Invalid {args.mode}")
