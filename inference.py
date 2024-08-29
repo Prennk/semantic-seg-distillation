@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.optim as optim
 import yaml
@@ -48,7 +49,7 @@ def test(model, test_loader, class_weights, class_encoding):
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
         print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
-def main(mode="train"):
+def main(mode="distill"):
     print("starting inference...")
     from data.camvid import CamVid as dataset
 
@@ -71,10 +72,12 @@ def main(mode="train"):
                                     args.name)[0]
         
     elif mode == "distill":
-        model = Create_DeepLabV3(num_classes, args).to(args.device)
-        optimizer = optim.SGD(model.parameters(), lr=0.01)
-        model = utils.load_checkpoint(model, optimizer, args.teacher_path,
-                            args.name)[0]
+        print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")
+        model = Create_DeepLabV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
+
+        # load pretrained teacher
+        teacher_dict = torch.load(args.teacher_path, map_location=args.device)["state_dict"]
+        model.load_state_dict(teacher_dict)
     else:
         print(f"Invalid {args.mode}")
 
