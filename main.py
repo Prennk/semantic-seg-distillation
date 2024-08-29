@@ -341,6 +341,7 @@ if __name__ == '__main__':
         inference()
 
     if args.mode.lower() == "distill":
+        inference(mode=args.mode)
         model, epoch, miou = distill(train_loader, val_loader, w_class, class_encoding, args)
         print(f"Best mIoU: {miou} in epoch {epoch + 1}")
         inference()

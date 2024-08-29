@@ -48,27 +48,35 @@ def test(model, test_loader, class_weights, class_encoding):
     for key, class_iou, class_pa in zip(class_encoding.keys(), iou, pa):
         print("{:<15} => IoU: {:>10.4f} | PA: {:>10.4f}".format(key, class_iou, class_pa))
 
-def main():
+def main(mode="train"):
     print("starting inference...")
     from data.camvid import CamVid as dataset
 
     loaders, w_class, class_encoding = data_utils.load_dataset(dataset, args)
     train_loader, val_loader, test_loader = loaders
     num_classes = len(class_encoding)
-
-    if args.model == 'enet':
-        model = Create_ENet(num_classes).to(args.device)
-    elif args.model == "deeplabv3_torch":
+    
+    if mode in ["train, test"]:
+        if args.model == 'enet':
+            model = Create_ENet(num_classes).to(args.device)
+        elif args.model == "deeplabv3_torch":
+            model = Create_DeepLabV3(num_classes, args).to(args.device)
+        elif args.model == "deeplabv3_cirkd":
+            model = get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args).to(args.device)
+        else:
+            raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
+        
+        optimizer = optim.SGD(model.parameters(), lr=0.01)
+        model = utils.load_checkpoint(model, optimizer, args.save_dir,
+                                    args.name)[0]
+        
+    elif mode == "distill":
         model = Create_DeepLabV3(num_classes, args).to(args.device)
-    elif args.model == "deeplabv3_cirkd":
-        model = get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args).to(args.device)
-
+        optimizer = optim.SGD(model.parameters(), lr=0.01)
+        model = utils.load_checkpoint(model, optimizer, args.save_dir,
+                            args.name)[0]
     else:
-        raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
-
-    optimizer = optim.SGD(model.parameters())
-    model = utils.load_checkpoint(model, optimizer, args.save_dir,
-                                        args.name)[0]
+        print(f"Invalid {args.mode}")
 
     test(model, test_loader, w_class, class_encoding)
 

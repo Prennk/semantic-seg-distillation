@@ -16,6 +16,8 @@ class Create_DeepLabV3(nn.Module):
                 weights_backbone = None
             else:
                 raise ValueError(f"Unknown pretrained command: {args.pretrained}")
+        elif args.mode == "distill":
+            print("Preparing model as teacher for distillation...")
         else:
             raise ValueError(f"Unknown argument {args.mode}")
         
