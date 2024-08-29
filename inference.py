@@ -56,7 +56,7 @@ def main(mode="train"):
     train_loader, val_loader, test_loader = loaders
     num_classes = len(class_encoding)
     
-    if mode in ["train, test"]:
+    if mode in ["train", "test"]:
         if args.model == 'enet':
             model = Create_ENet(num_classes).to(args.device)
         elif args.model == "deeplabv3_torch":
