@@ -13,7 +13,7 @@ class VIDVAELoss(nn.Module):
             nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(128 * 60//4 * (45//4)+1, 256),
+            nn.Linear(128 * 16 * 12, 256),
             nn.ReLU(),
         )
 
@@ -21,9 +21,9 @@ class VIDVAELoss(nn.Module):
         self.fc_logvar = nn.Linear(256, num_latent_dim)
 
         self.decoder = nn.Sequential(
-            nn.Linear(num_latent_dim, 128 * 60//4 * (45//4)+1),
+            nn.Linear(num_latent_dim, 128 * 16 * 12),
             nn.ReLU(),
-            nn.Unflatten(1, (128, 60//4, (45//4)+1)),
+            nn.Unflatten(1, (128, 16, 12)),
             nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.ReLU(),
             nn.ConvTranspose2d(64, num_target_channels, kernel_size=3, stride=2, padding=1, output_padding=1),
