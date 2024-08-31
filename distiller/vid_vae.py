@@ -64,6 +64,9 @@ class VIDVAELoss(nn.Module):
         reconstructed = self.decoder(z)
         reconstructed = F.interpolate(reconstructed, size=(target.shape[2], target.shape[3]), mode='bilinear', align_corners=False)
 
+        target = target.clone()
+        reconstructed = reconstructed.clone()
+
         recon_loss = F.mse_loss(reconstructed, target, reduction='mean')
         kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
