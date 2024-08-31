@@ -17,6 +17,7 @@ from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
 from distiller.vid import VIDLoss
+from distiller.vid_vae import VIDVAELoss
 from inference import main as inference
 
 wandb.init(project="SemSeg-Distill")
@@ -184,7 +185,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Student layer shapes: {[shape for shape in s_shapes]}")
 
     vid_criterions = nn.ModuleList(
-        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
+        [VIDVAELoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
     # vid_criterions = VIDLoss(s_y.shape[1], t_y["out"].shape[1], t_y["out"].shape[1])
     
     
