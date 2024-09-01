@@ -190,6 +190,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     #     [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
     
     crd_criterion = CRDLoss()
+
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     
     optimizer = optim.SGD(
