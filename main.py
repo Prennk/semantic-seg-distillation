@@ -17,7 +17,6 @@ from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
 from distiller.vid import VIDLoss
-from crd.criterion import CRDLoss
 from inference import main as inference
 
 wandb.init(project="SemSeg-Distill")
@@ -162,35 +161,38 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Creating student model: enet...")
     s_model = Create_ENet(num_classes, layers_to_hook=args.student_layers).to(args.device)
 
-    # print(f"\nTeacher layer to distill: \n{args.teacher_layers}")
-    # print(f"Student layer to distill: \n{args.student_layers}")
+    # print layer to distill
+    print(f"\nTeacher layer to distill: \n{args.teacher_layers}")
+    print(f"Student layer to distill: \n{args.student_layers}")
 
-    # if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
-    #     raise ValueError("Number of layers to distill in teacher and student models do not match.")
+    if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
+        raise ValueError("Number of layers to distill in teacher and student models do not match.")
 
-    # x = torch.randn(1, 3, args.width, args.height).to(args.device)
-    # t_model.eval()
-    # t_y = t_model(x)
-    # t_model.train()
-    # s_model.eval()
-    # s_y = s_model(x)
-    # s_model.train()
+    # get layers size for VID
+    x = torch.randn(1, 3, args.width, args.height).to(args.device)
+    t_model.eval()
+    t_y = t_model(x)
+    t_model.train()
+    s_model.eval()
+    s_y = s_model(x)
+    s_model.train()
 
-    # if args.teacher_layers:
-    #     t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
-    #     s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
-    # else:
-    #     t_shapes = [t_y["out"].shape]
-    #     s_shapes = [s_y.shape]
+    if args.teacher_layers:
+        t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
+        s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
+    else:
+        t_shapes = [t_y["out"].shape]
+        s_shapes = [s_y.shape]
 
-    # print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
-    # print(f"Student layer shapes: {[shape for shape in s_shapes]}")
+    print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
+    print(f"Student layer shapes: {[shape for shape in s_shapes]}")
 
-    # vid_criterions = nn.ModuleList(
-    #     [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
+    vid_criterions = nn.ModuleList(
+        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
     
-    crd_criterion = CRDLoss()
-
+    # We are going to use the CrossEntropyLoss loss function as it's most
+    # frequentely used in classification problems with multiple classes which
+    # fits the problem. This criterion  combines LogSoftMax and NLLLoss.
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     
     optimizer = optim.SGD(
@@ -228,7 +230,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print()
     distill = loops.Distill(
         t_model, s_model, train_loader, optimizer, criterion, 
-        crd_criterion, metric_iou, metric_pa, args.device)
+        vid_criterions, metric_iou, metric_pa, args.device)
     val = loops.Test(s_model, val_loader, criterion, metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))
