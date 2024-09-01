@@ -178,7 +178,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     s_y = s_model(x)
     s_model.train()
 
-    t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y.shape]
+    t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
     s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
 
     print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
