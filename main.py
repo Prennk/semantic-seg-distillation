@@ -166,7 +166,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"\nTeacher layer to distill: \n{args.teacher_layers}")
     print(f"Student layer to distill: \n{args.student_layers}")
 
-    if len(args.teacher_layers) != len(args.student_layers):
+    if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
         raise ValueError("Number of layers to distill in teacher and student models do not match.")
 
     # get layers size for VID
@@ -178,16 +178,18 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     s_y = s_model(x)
     s_model.train()
 
-    t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
-    s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
+    if args.teacher_layers:
+        t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
+        s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
+    else:
+        t_shapes = [t_y["out"].shape]
+        s_shapes = [s_y.shape]
 
     print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
     print(f"Student layer shapes: {[shape for shape in s_shapes]}")
 
     vid_criterions = nn.ModuleList(
-        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)]
-          + [VIDLoss(s_y.shape[1], t_y["out"].shape[1], t_y["out"].shape[1])])
-    
+        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
     
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
