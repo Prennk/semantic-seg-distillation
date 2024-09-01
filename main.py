@@ -17,7 +17,6 @@ from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
 from distiller.vid import VIDLoss
-from distiller.vid_vae import VIDVAELoss
 from inference import main as inference
 
 wandb.init(project="SemSeg-Distill")
