@@ -20,13 +20,13 @@ class CRDLoss(nn.Module):
         opt.nce_m: the momentum for updating the memory buffer
         opt.n_data: the number of samples in the training set, therefor the memory buffer is: opt.n_data x opt.feat_dim
     """
-    def __init__(self, opt):
+    def __init__(self):
         super(CRDLoss, self).__init__()
         self.embed_s = Embed_s()
         self.embed_t = Embed_t()
-        self.contrast = ContrastMemory(opt.feat_dim, opt.n_data, opt.nce_k, opt.nce_t, opt.nce_m)
-        self.criterion_t = ContrastLoss(opt.n_data)
-        self.criterion_s = ContrastLoss(opt.n_data)
+        self.contrast = ContrastMemory()
+        self.criterion_t = ContrastLoss()
+        self.criterion_s = ContrastLoss()
 
     def forward(self, f_s, f_t, idx=None, contrast_idx=None):
         """
@@ -52,7 +52,7 @@ class ContrastLoss(nn.Module):
     """
     contrastive loss, corresponding to Eq (18)
     """
-    def __init__(self, n_data):
+    def __init__(self, n_data=367):
         super(ContrastLoss, self).__init__()
         self.n_data = n_data
 
