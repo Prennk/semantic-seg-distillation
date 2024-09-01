@@ -78,6 +78,7 @@ class ContrastLoss(nn.Module):
 
 class Embed_t(nn.Module):
     def __init__(self, num_input_channels=256, dim_out=128):
+        super(Embed_t, self).__init__()
         self.encoder = nn.Sequential(
             nn.Conv2d(num_input_channels, 2048, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
@@ -93,6 +94,7 @@ class Embed_t(nn.Module):
     
 class Embed_s(nn.Module):
     def __init__(self, num_input_channels=16, dim_out=128):
+        super(Embed_s, self).__init__()
         self.encoder = nn.Sequential(
             nn.Conv2d(num_input_channels, 2048, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
