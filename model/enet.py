@@ -644,6 +644,11 @@ class Create_ENet(nn.Module):
         return output
     
     def _register_hooks(self):
+        available_layers = [name for name, _ in self.model.named_modules()]
+        invalid_layers = [layer for layer in self.layers_to_hook if layer not in available_layers]
+        if invalid_layers:
+            raise NameError("The following layers are not found in the model: {invalid_layers}")
+
         for name, module in self.model.named_modules():
             if name in self.layers_to_hook:
                 module.register_forward_hook(self._hook(name))
