@@ -76,8 +76,8 @@ class Create_DeepLabV3_ResNet18(nn.Module):
         print("Preparing model: DeepLabV3-ResNet18...")
         if args.mode in ["train", "test", "distill"]:
             if args.pretrained and args.mode != "distill":
-                print("Loading pretrained ResNet18_Weights.IMAGENET1K_V2...")
-                weights_backbone = models.ResNet18_Weights.IMAGENET1K_V2
+                print("Loading pretrained ResNet18_Weights.IMAGENET1K_V1...")
+                weights_backbone = models.ResNet18_Weights.IMAGENET1K_V1
             elif not args.pretrained or args.mode == "distill":
                 weights_backbone = None
             else:
