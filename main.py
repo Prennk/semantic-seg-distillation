@@ -177,12 +177,17 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     s_y = s_model(x)
     s_model.train()
 
-    if args.teacher_layers:
+    if len(args.teacher_layers > 1) and args.teacher_layers[-1] == "out":
         t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
         s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
-    else:
+    elif len(args.teacher_layers > 1) and args.teacher_layers[-1] != "out":
+        t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
+        s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
+    elif len(args.teacher_layers == 1) and args.teacher_layers[-1] == "out":
         t_shapes = [t_y["out"].shape]
         s_shapes = [s_y.shape]
+    else:
+        raise ValueError("Please provide layer names for distillation")
 
     print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
     print(f"Student layer shapes: {[shape for shape in s_shapes]}")
