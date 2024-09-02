@@ -37,13 +37,16 @@ class VIDLoss(nn.Module):
 
     def forward(self, input, target):
         # pool for dimentsion match
-        s_H, t_H = input.shape[2], target.shape[2]
+        s_H, s_W = input.shape[2], input.shape[3]
+        t_H, t_W = target.shape[2], target.shape[3]
+
         if s_H > t_H:
-            input = F.adaptive_avg_pool2d(input, (t_H, t_H))
+            input = F.adaptive_avg_pool2d(input, (t_H, t_W))
         elif s_H < t_H:
-            target = F.adaptive_avg_pool2d(target, (s_H, s_H))
+            target = F.adaptive_avg_pool2d(target, (s_H, s_W))
         else:
             pass
+        
         pred_mean = self.regressor(input)
         pred_var = torch.log(1.0+torch.exp(self.log_scale))+self.eps
         pred_var = pred_var.view(1, -1, 1, 1)
