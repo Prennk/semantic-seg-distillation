@@ -1,6 +1,5 @@
-import torch
 from torchinfo import summary
-from model.deeplabv3_torchvision import Create_DeepLabV3
+from model.deeplabv3_torchvision import Create_DeepLabV3_ResNet101, Create_DeepLabV3_ResNet18
 from model.deeplabv3_custom import get_deeplabv3
 from model.enet import Create_ENet
 from utils.utils import merge_args_with_config
@@ -25,23 +24,17 @@ def show_summary(model):
     row_settings=["var_names"])
 
 if __name__ == "__main__":
-    if args.model == "deeplabv3_torch":
-        model = Create_DeepLabV3(11, args)
+    if args.model == "deeplabv3_resnet101":
+        model = Create_DeepLabV3_ResNet101(12, args)
+        show_summary(model)
+    elif args.model == "deeplabv3_resnet18":
+        model = Create_DeepLabV3_ResNet18(12, args)
         show_summary(model)
     elif args.model == "deeplabv3_cirkd":
-        model = get_deeplabv3(num_classes=11, backbone="resnet101", args=args)
+        model = get_deeplabv3(num_classes=12, backbone="resnet101", args=args)
         show_summary(model)
     elif args.model == "enet":
-        model = Create_ENet(11)
-        show_summary(model)
-    elif args.model == "all":
-        model = Create_DeepLabV3(11, args)
-        show_summary(model)
-        print()
-        model = Create_DeepLabV3(11, args)
-        show_summary(model)
-        print()
-        model = Create_ENet(11)
+        model = Create_ENet(12)
         show_summary(model)
     else:
         raise ValueError("Unknown model")
