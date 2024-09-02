@@ -14,7 +14,7 @@ import wandb # type: ignore
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
-from model.deeplabv3_torchvision import Create_DeepLabV3_ResNet101, Create_DeepLabV3_ResNet18
+from model.deeplabv3_torchvision import Create_DeepLabV3_ResNet101
 from model.deeplabv3_custom import get_deeplabv3
 from distiller.vid import VIDLoss
 from inference import main as inference
@@ -58,10 +58,8 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
     # Intialize model
     if args.model == 'enet':
         model = Create_ENet(num_classes).to(args.device)
-    elif args.model == "deeplabv3_resnet101":
+    elif args.model == "deeplabv3_torch":
         model = Create_DeepLabV3_ResNet101(num_classes, args).to(args.device)
-    elif args.model == "deeplabv3_resnet18":
-        model = Create_DeepLabV3_ResNet18(num_classes, args).to(args.device)
     elif args.model == "deeplabv3_cirkd":
         model = get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args).to(args.device)
     else:
@@ -161,12 +159,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     t_model.load_state_dict(teacher_dict)
 
     print(f"Creating student model: {args.model}")
-    if args.model == 'enet':
-        s_model = Create_ENet(num_classes, layers_to_hook=args.student_layers).to(args.device)
-    elif args.model == "deeplabv3_resnet18":
-        s_model = Create_DeepLabV3_ResNet18(num_classes, layers_to_hook=args.student_layers).to(args.device)
-    else:
-        raise ValueError(f"If mode is distill, student model is set in {args.model}")
+    s_model = Create_ENet(num_classes, layers_to_hook=args.student_layers).to(args.device)
 
     # print layer to distill
     print(f"\nTeacher layer to distill: \n{args.teacher_layers}")
