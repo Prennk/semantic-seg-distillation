@@ -5,7 +5,7 @@ import torchvision.models.segmentation as seg_model
 class Create_DeepLabV3_ResNet101(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):
         super(Create_DeepLabV3_ResNet101, self).__init__()
-        print(f"Preparing model: {args.model}...")
+        print("Preparing model: DeepLabV3-ResNet101...")
         if args.mode in ["train", "test", "distill"]:
             if args.pretrained and args.mode != "distill":
                 print("Loading pretrained ResNet101_Weights.IMAGENET1K_V2...")
@@ -73,7 +73,7 @@ class Create_DeepLabV3_ResNet101(nn.Module):
 class Create_DeepLabV3_ResNet18(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):
         super(Create_DeepLabV3_ResNet18, self).__init__()
-        print(f"Preparing model: {args.model}...")
+        print("Preparing model: DeepLabV3-ResNet18...")
         if args.mode in ["train", "test", "distill"]:
             if args.pretrained and args.mode != "distill":
                 print("Loading pretrained ResNet18_Weights.IMAGENET1K_V2...")
