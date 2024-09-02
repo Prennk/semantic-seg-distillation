@@ -177,18 +177,8 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     s_y = s_model(x)
     s_model.train()
 
-    if len(args.teacher_layers) > 1 and args.teacher_layers[-1] == "out":
-        t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers] + [t_y["out"].shape]
-        s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers] + [s_y.shape]
-    elif len(args.teacher_layers) > 1 and args.teacher_layers[-1] != "out":
-        t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
-        s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
-    elif len(args.teacher_layers) == 1 and args.teacher_layers[-1] == "out":
-        t_shapes = [t_y["out"].shape]
-        s_shapes = [s_y.shape]
-    else:
-        raise ValueError("Please provide layer names for distillation")
-
+    t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
+    s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
     print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
     print(f"Student layer shapes: {[shape for shape in s_shapes]}")
 
@@ -235,7 +225,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print()
     distill = loops.Distill(
         t_model, s_model, train_loader, optimizer, criterion, 
-        vid_criterions, metric_iou, metric_pa, args.device, args)
+        vid_criterions, metric_iou, metric_pa, args.device)
     val = loops.Test(s_model, val_loader, criterion, metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))

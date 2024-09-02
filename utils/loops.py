@@ -176,7 +176,7 @@ class Distill:
 
     """
 
-    def __init__(self, t_model, s_model, data_loader, optim, criterion, distill_criterion, metric_iou, metric_pa, device, args):
+    def __init__(self, t_model, s_model, data_loader, optim, criterion, distill_criterion, metric_iou, metric_pa, device):
         self.t_model = t_model
         self.s_model = s_model
         self.data_loader = data_loader
@@ -186,7 +186,6 @@ class Distill:
         self.metric_iou = metric_iou
         self.metric_pa = metric_pa
         self.device = device
-        self.args = args
 
     def run_epoch(self, iteration_loss=False):
         """Runs an epoch of training."""
@@ -223,21 +222,10 @@ class Distill:
 
             # Distill loss
             self.distill_criterion.to(self.device)
-            if len(self.args.teacher_layers) > 1 and self.args.teacher_layers[-1] == "out":
-                for idx, (t_layer, s_layer) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
-                    t_features = self.t_model.get_feature_map(t_layer)
-                    s_features = self.s_model.get_feature_map(s_layer)
-                    distill_loss += self.distill_criterion[idx](s_features, t_features)
-                distill_loss += self.distill_criterion[-1](s_outputs, t_outputs)
-            elif len(self.args.teacher_layers) > 1 and self.args.teacher_layers[-1] != "out":
-                for idx, (t_layer, s_layer) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
-                    t_features = self.t_model.get_feature_map(t_layer)
-                    s_features = self.s_model.get_feature_map(s_layer)
-                    distill_loss += self.distill_criterion[idx](s_features, t_features)
-            elif len(self.args.teacher_layers) == 1 and self.args.teacher_layers[-1] == "out":
-                distill_loss += self.distill_criterion[-1](s_outputs, t_outputs)
-            else:
-                raise ValueError("Error Layer")
+            for idx, (t_layer, s_layer) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
+                t_features = self.t_model.get_feature_map(t_layer)
+                s_features = self.s_model.get_feature_map(s_layer)
+                distill_loss += self.distill_criterion[idx](s_features, t_features)
 
             # Total loss
             total_loss = loss + distill_loss
