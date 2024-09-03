@@ -63,7 +63,8 @@ class Create_DeepLabV3(nn.Module):
     
     def _hook(self, layer_name):
         def hook_fn(module, input, output):
-            # output.retain_grad()
+            if self.model.training:
+                output.retain_grad()
             self.feature_maps[layer_name] = output
 
         return hook_fn
