@@ -279,7 +279,7 @@ def predict(model, images, class_encoding, epoch):
     # Make predictions!
     model.eval()
     with torch.no_grad():
-        predictions = model(images)
+        predictions, _ = model(images)
         if type(predictions) == OrderedDict:
             predictions = predictions["out"]
 
