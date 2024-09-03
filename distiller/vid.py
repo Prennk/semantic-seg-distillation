@@ -64,7 +64,7 @@ class VIDLoss(nn.Module):
                 conv1x1(num_mid_channel, num_target_channels),
             )
         else:
-            raise ValueError("Please provide a valid regressor type")
+            raise ValueError(f"Invalid {args.regressor_type}. Please provide a valid regressor type.")
 
         self.log_scale = torch.nn.Parameter(
             np.log(np.exp(init_pred_var-eps)-1.0) * torch.ones(num_target_channels)
