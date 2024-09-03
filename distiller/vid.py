@@ -14,7 +14,8 @@ class VIDLoss(nn.Module):
                  num_mid_channel,
                  num_target_channels,
                  init_pred_var=5.0,
-                 eps=1e-5):
+                 eps=1e-5,
+                 regressor_type="default"):
         super(VIDLoss, self).__init__()
 
         def conv1x1(in_channels, out_channels, stride=1):
@@ -23,13 +24,45 @@ class VIDLoss(nn.Module):
                 kernel_size=1, padding=0,
                 bias=False, stride=stride)
 
-        self.regressor = nn.Sequential(
-            conv1x1(num_input_channels, num_mid_channel),
-            nn.ReLU(),
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-            conv1x1(num_mid_channel, num_target_channels),
-        )
+        if regressor_type == "default":
+            self.regressor = nn.Sequential(
+                conv1x1(num_input_channels, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_target_channels),
+            )
+        elif regressor_type == "plus":
+            self.regressor = nn.Sequential(
+                conv1x1(num_input_channels, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+
+                conv1x1(num_mid_channel, num_target_channels),
+            )
+        else:
+            raise ValueError("Please provide a valid regressor type")
 
         self.log_scale = torch.nn.Parameter(
             np.log(np.exp(init_pred_var-eps)-1.0) * torch.ones(num_target_channels)
