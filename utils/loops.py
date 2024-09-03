@@ -222,7 +222,7 @@ class Distill:
             loss = self.criterion(s_outputs, labels)
 
             # Reset distill_loss for each batch
-            distill_loss = 0.0
+            distill_loss = []
 
             # Distill loss
             self.distill_criterion.to(self.device)
@@ -230,10 +230,11 @@ class Distill:
                 t_features = t_intermediate_features[t_layer_name]
                 # s_features = s_intermediate_features[s_layer_name]
                 s_features = s_inter[idx]
-                distill_loss += self.distill_criterion[idx](s_features, t_features)
-                
+                distill_loss.append(self.distill_criterion[idx](s_features, t_features))
+
+            total_distil_loss = sum(distill_loss)    
             # Total loss
-            total_loss = loss + distill_loss
+            total_loss = loss + total_distil_loss
 
             # Backpropagation
             self.optim.zero_grad()
