@@ -49,7 +49,7 @@ class Train:
             labels = batch_data[1].to(self.device)
 
             # Forward propagation
-            outputs = self.model(inputs)
+            outputs, _ = self.model(inputs)
 
             if isinstance(outputs, OrderedDict):
                 aux_outputs = outputs['aux']
@@ -132,7 +132,7 @@ class Test:
 
             with torch.no_grad():
                 # Forward propagation
-                outputs = self.model(inputs)
+                outputs, _ = self.model(inputs)
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
