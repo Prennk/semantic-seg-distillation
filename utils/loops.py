@@ -210,7 +210,7 @@ class Distill:
                     t_outputs = t_outputs['out']
 
             # Forward propagation for student
-            s_outputs, s_intermediate_features = self.s_model(inputs)
+            s_outputs, s_inter, s_intermediate_features = self.s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
                 s_outputs = s_outputs['out']
 
@@ -224,7 +224,8 @@ class Distill:
             self.distill_criterion.to(self.device)
             for idx, (t_layer_name, s_layer_name) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
                 t_features = t_intermediate_features[t_layer_name]
-                s_features = s_intermediate_features[s_layer_name]
+                # s_features = s_intermediate_features[s_layer_name]
+                s_features = s_inter[idx]
                 distill_loss += self.distill_criterion[idx](s_features, t_features)
                 
             # Total loss

@@ -174,7 +174,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
 
     with torch.no_grad():
         t_outputs, t_intermediate_features = t_model(x)
-        s_outputs, s_intermediate_features = s_model(x)
+        s_outputs, s_inter, s_intermediate_features = s_model(x)
 
     t_model.train()
     s_model.train()
