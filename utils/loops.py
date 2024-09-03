@@ -132,7 +132,7 @@ class Test:
 
             with torch.no_grad():
                 # Forward propagation
-                outputs = self.model(inputs)
+                outputs, _ = self.model(inputs)
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
