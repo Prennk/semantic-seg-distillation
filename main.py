@@ -168,22 +168,24 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
         raise ValueError("Number of layers to distill in teacher and student models do not match.")
 
-    # get layers size for VID
     x = torch.randn(1, 3, args.width, args.height).to(args.device)
     t_model.eval()
-    t_y = t_model(x)
-    t_model.train()
     s_model.eval()
-    s_y = s_model(x)
+
+    with torch.no_grad():
+        t_outputs, t_intermediate_features = t_model(x)
+        s_outputs, s_intermediate_features = s_model(x)
+
+    t_model.train()
     s_model.train()
 
-    t_shapes = [t_model.get_feature_map(layer).shape for layer in args.teacher_layers]
-    s_shapes = [s_model.get_feature_map(layer).shape for layer in args.student_layers]
-    print(f"Teacher layer shapes: {[shape for shape in t_shapes]}")
-    print(f"Student layer shapes: {[shape for shape in s_shapes]}")
-
+    t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers]
+    s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers]
+    print(f"Teacher layer shapes: {t_shapes}")
+    print(f"Student layer shapes: {s_shapes}")
     vid_criterions = nn.ModuleList(
-        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)])
+        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)]
+    )
     
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
