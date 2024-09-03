@@ -47,14 +47,15 @@ class Create_DeepLabV3(nn.Module):
 
     def forward(self, x):
         output = self.model(x)
+        intermediate_features = {name: self.feature_maps.get(name, None) for name in self.layers_to_hook}
 
-        return output
+        return output, intermediate_features
 
     def _register_hooks(self):
         available_layers = [name for name, _ in self.model.named_modules()]
         invalid_layers = [layer for layer in self.layers_to_hook if layer not in available_layers]
         if invalid_layers:
-            raise NameError("The following layers are not found in the model: {invalid_layers}")
+            raise NameError(f"The following layers are not found in the model: {invalid_layers}")
 
         for name, module in self.model.named_modules():
             if name in self.layers_to_hook:
@@ -62,9 +63,6 @@ class Create_DeepLabV3(nn.Module):
     
     def _hook(self, layer_name):
         def hook_fn(module, input, output):
-            self.feature_maps[layer_name] = output.detach()
+            self.feature_maps[layer_name] = output
 
         return hook_fn
-
-    def get_feature_map(self, layer_name):
-        return self.feature_maps.get(layer_name, None)

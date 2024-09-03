@@ -23,42 +23,14 @@ class VIDLoss(nn.Module):
                 kernel_size=1, padding=0,
                 bias=False, stride=stride)
 
-        # self.regressor = nn.Sequential(
-        #     conv1x1(num_input_channels, num_mid_channel),
-        #     nn.ReLU(),
-        #     conv1x1(num_mid_channel, num_mid_channel),
-        #     nn.ReLU(),
-        #     conv1x1(num_mid_channel, num_target_channels),
-        # )
-
         self.regressor = nn.Sequential(
             conv1x1(num_input_channels, num_mid_channel),
             nn.ReLU(),
             conv1x1(num_mid_channel, num_mid_channel),
             nn.ReLU(),
-
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-            conv1x1(num_mid_channel, num_mid_channel),
-            nn.ReLU(),
-
             conv1x1(num_mid_channel, num_target_channels),
         )
+
         self.log_scale = torch.nn.Parameter(
             np.log(np.exp(init_pred_var-eps)-1.0) * torch.ones(num_target_channels)
             )

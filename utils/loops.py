@@ -205,12 +205,12 @@ class Distill:
 
             # Forward propagation for teacher
             with torch.inference_mode():
-                t_outputs = self.t_model(inputs)
+                t_outputs, t_intermediate_features = self.t_model(inputs)
                 if isinstance(t_outputs, OrderedDict):
                     t_outputs = t_outputs['out']
 
             # Forward propagation for student
-            s_outputs = self.s_model(inputs)
+            s_outputs, s_intermediate_features = self.s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
                 s_outputs = s_outputs['out']
 
@@ -222,11 +222,11 @@ class Distill:
 
             # Distill loss
             self.distill_criterion.to(self.device)
-            for idx, (t_layer, s_layer) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
-                t_features = self.t_model.get_feature_map(t_layer)
-                s_features = self.s_model.get_feature_map(s_layer)
+            for idx, layer_name in enumerate(self.t_model.layers_to_hook):
+                t_features = t_intermediate_features[layer_name]
+                s_features = s_intermediate_features[layer_name]
                 distill_loss += self.distill_criterion[idx](s_features, t_features)
-
+                
             # Total loss
             total_loss = loss + distill_loss
 
