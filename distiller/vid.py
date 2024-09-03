@@ -10,12 +10,12 @@ class VIDLoss(nn.Module):
     """Variational Information Distillation for Knowledge Transfer (CVPR 2019),
     code from author: https://github.com/ssahn0215/variational-information-distillation"""
     def __init__(self,
+                 args,
                  num_input_channels,
                  num_mid_channel,
                  num_target_channels,
                  init_pred_var=5.0,
-                 eps=1e-5,
-                 regressor_type="default"):
+                 eps=1e-5):
         super(VIDLoss, self).__init__()
 
         def conv1x1(in_channels, out_channels, stride=1):
@@ -24,7 +24,8 @@ class VIDLoss(nn.Module):
                 kernel_size=1, padding=0,
                 bias=False, stride=stride)
 
-        if regressor_type == "default":
+        if args.regressor_type == "default":
+            print("VID regressor: default")
             self.regressor = nn.Sequential(
                 conv1x1(num_input_channels, num_mid_channel),
                 nn.ReLU(),
@@ -32,7 +33,8 @@ class VIDLoss(nn.Module):
                 nn.ReLU(),
                 conv1x1(num_mid_channel, num_target_channels),
             )
-        elif regressor_type == "plus":
+        elif args.regressor_type == "medium":
+            print("VID regressor: medium")
             self.regressor = nn.Sequential(
                 conv1x1(num_input_channels, num_mid_channel),
                 nn.ReLU(),
