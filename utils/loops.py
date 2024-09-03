@@ -222,9 +222,9 @@ class Distill:
 
             # Distill loss
             self.distill_criterion.to(self.device)
-            for idx, layer_name in enumerate(self.t_model.layers_to_hook):
-                t_features = t_intermediate_features[layer_name]
-                s_features = s_intermediate_features[layer_name]
+            for idx, (t_layer_name, s_layer_name) in enumerate(zip(self.t_model.layers_to_hook, self.t_model.layers_to_hook)):
+                t_features = t_intermediate_features[t_layer_name]
+                s_features = s_intermediate_features[s_layer_name]
                 distill_loss += self.distill_criterion[idx](s_features, t_features)
                 
             # Total loss
