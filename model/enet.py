@@ -595,7 +595,6 @@ class ENet(nn.Module):
         x = self.regular1_2(x)
         x = self.regular1_3(x)
         x = self.regular1_4(x)
-        regular1_4 = x
 
         # Stage 2 - Encoder
         stage2_input_size = x.size()
@@ -608,7 +607,6 @@ class ENet(nn.Module):
         x = self.dilated2_6(x)
         x = self.asymmetric2_7(x)
         x = self.dilated2_8(x)
-        dilated2_8 = x
 
         # Stage 3 - Encoder
         x = self.regular3_0(x)
@@ -619,22 +617,18 @@ class ENet(nn.Module):
         x = self.dilated3_5(x)
         x = self.asymmetric3_6(x)
         x = self.dilated3_7(x)
-        dilated3_7 = x
 
         # Stage 4 - Decoder
         x = self.upsample4_0(x, max_indices2_0, output_size=stage2_input_size)
         x = self.regular4_1(x)
         x = self.regular4_2(x)
-        regular4_2 = x
 
         # Stage 5 - Decoder
         x = self.upsample5_0(x, max_indices1_0, output_size=stage1_input_size)
         x = self.regular5_1(x)
-        regular5_1 = x
-
         x = self.transposed_conv(x, output_size=input_size)
 
-        return x, [regular1_4, dilated2_8, dilated3_7, regular4_2, regular5_1]
+        return x
     
 class Create_ENet(nn.Module):
     def __init__(self, num_classes, encoder_relu=False, decoder_relu=True, layers_to_hook=None):
@@ -645,10 +639,10 @@ class Create_ENet(nn.Module):
         self._register_hooks()
 
     def forward(self, x):
-        x, outputs = self.model(x)
+        output = self.model(x)
         intermediate_features = {name: self.feature_maps.get(name, None) for name in self.layers_to_hook}
 
-        return x, outputs, intermediate_features
+        return output, intermediate_features
     
     def _register_hooks(self):
         available_layers = [name for name, _ in self.model.named_modules()]
@@ -662,8 +656,6 @@ class Create_ENet(nn.Module):
 
     def _hook(self, layer_name):
         def hook_fn(module, input, output):
-            if self.model.training:
-                output.retain_grad()
             self.feature_maps[layer_name] = output
 
         return hook_fn
