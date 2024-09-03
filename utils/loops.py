@@ -132,7 +132,11 @@ class Test:
 
             with torch.no_grad():
                 # Forward propagation
-                outputs, _ = self.model(inputs)
+                result = self.model(inputs)
+                if isinstance(result, tuple) and len(result) == 3:
+                    outputs, _, _ = result
+                elif isinstance(result, tuple) and len(result) == 2:
+                    outputs, _ = result
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
@@ -204,7 +208,7 @@ class Distill:
             labels = batch_data[1].to(self.device)
 
             # Forward propagation for teacher
-            with torch.inference_mode():
+            with torch.no_grad():
                 t_outputs, t_intermediate_features = self.t_model(inputs)
                 if isinstance(t_outputs, OrderedDict):
                     t_outputs = t_outputs['out']
