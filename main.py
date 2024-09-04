@@ -184,7 +184,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Teacher layer shapes: {t_shapes}")
     print(f"Student layer shapes: {s_shapes}")
     vid_criterions = nn.ModuleList(
-        [VIDLoss(args, s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)]
+        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]) for s_shape, t_shape in zip(s_shapes, t_shapes)]
     )
     
     # We are going to use the CrossEntropyLoss loss function as it's most
