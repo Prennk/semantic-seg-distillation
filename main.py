@@ -179,8 +179,8 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     t_model.train()
     s_model.train()
 
-    t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers] + [t_outputs["out"].shape]
-    s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers] + [s_outputs.shape]
+    t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers]
+    s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers]
     print(f"Teacher layer shapes: {t_shapes}")
     print(f"Student layer shapes: {s_shapes}")
     vid_criterions = nn.ModuleList(
