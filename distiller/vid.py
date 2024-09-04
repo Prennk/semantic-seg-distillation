@@ -23,12 +23,6 @@ class VIDLoss(nn.Module):
                 in_channels, out_channels,
                 kernel_size=1, padding=0,
                 bias=False, stride=stride)
-        
-        def conv3x3(in_channels, out_channels, stride=1):
-            return nn.Conv2d(
-                in_channels, out_channels,
-                kernel_size=3, padding=1,
-                bias=False, stride=stride)
 
         if args.regressor_type == "default":
             print("VID regressor: default")
@@ -44,34 +38,25 @@ class VIDLoss(nn.Module):
             self.regressor = nn.Sequential(
                 conv1x1(num_input_channels, num_mid_channel),
                 nn.ReLU(),
-                conv3x3(num_mid_channel, num_mid_channel),
-                nn.ReLU(),
-                conv3x3(num_mid_channel, num_mid_channel),
-                nn.ReLU(),
                 conv1x1(num_mid_channel, num_mid_channel),
                 nn.ReLU(),
                 conv1x1(num_mid_channel, num_mid_channel),
                 nn.ReLU(),
-                conv1x1(num_mid_channel, num_target_channels),
-            )
-        elif args.regressor_type == "ultra":
-            print("VID regressor: ultra")
-            self.regressor = nn.Sequential(
+
                 conv1x1(num_input_channels, num_mid_channel),
                 nn.ReLU(),
-                conv3x3(num_mid_channel, num_mid_channel),
-                nn.ReLU(),
-                
-                nn.Conv2d(num_mid_channel, num_mid_channel, kernel_size=3, stride=2, padding=1),
-                nn.ReLU(),
-                conv3x3(num_mid_channel, num_mid_channel),
-                nn.ReLU(),
-                
-                nn.ConvTranspose2d(num_mid_channel, num_mid_channel, kernel_size=3, stride=2, padding=1, output_padding=1),
+                conv1x1(num_mid_channel, num_mid_channel),
                 nn.ReLU(),
                 conv1x1(num_mid_channel, num_mid_channel),
                 nn.ReLU(),
-                
+
+                conv1x1(num_input_channels, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+                conv1x1(num_mid_channel, num_mid_channel),
+                nn.ReLU(),
+
                 conv1x1(num_mid_channel, num_target_channels),
             )
         else:
