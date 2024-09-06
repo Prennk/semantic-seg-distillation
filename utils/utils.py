@@ -91,13 +91,13 @@ def save_checkpoint(model, optimizer, epoch, miou, mpa, args):
 
 
 def load_checkpoint(model, optimizer, folder_dir, filename):
-    """Saves the model in a specified directory with a specified name.save
+    """Loads the model and optimizer state from a specified file.
 
     Keyword arguments:
     - model (``nn.Module``): The stored model state is copied to this model
     instance.
-    - optimizer (``torch.optim``): The stored optimizer state is copied to this
-    optimizer instance.
+    - optimizer (``torch.optim``): The optimizer instance where only the model's
+    optimizer state will be copied (excluding additional components like VIDLoss).
     - folder_dir (``string``): The path to the folder where the saved model
     state is located.
     - filename (``string``): The model filename.
@@ -105,33 +105,49 @@ def load_checkpoint(model, optimizer, folder_dir, filename):
     Returns:
     The epoch, mean IoU, mPA, ``model``, and ``optimizer`` loaded from the
     checkpoint.
-
     """
     assert os.path.isdir(
-        folder_dir), "The directory \"{0}\" doesn't exist.".format(folder_dir)
+        folder_dir), f"The directory \"{folder_dir}\" doesn't exist."
 
-    # Create folder to save model and information
     model_path = os.path.join(folder_dir, filename)
     assert os.path.isfile(
-        model_path), "The model file \"{0}\" doesn't exist.".format(filename)
+        model_path), f"The model file \"{filename}\" doesn't exist."
     
     # Load the stored model parameters to the model instance
-    print(f'Loading model from {folder_dir} + {filename}...')
+    print(f'Loading model from {folder_dir}/{filename}...')
     checkpoint = torch.load(model_path)
+
+    # Load the model state
     model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
+
+    # Load the optimizer state for the model only (filter parameters)
+    optimizer_state_dict = checkpoint['optimizer']
+    optimizer_param_groups = optimizer_state_dict['param_groups']
+
+    # Filter only the parameters related to the model
+    model_param_ids = {id(p) for p in model.parameters()}
+    filtered_param_groups = []
+    
+    for param_group in optimizer_param_groups:
+        filtered_params = [p for p in param_group['params'] if id(p) in model_param_ids]
+        if filtered_params:
+            param_group['params'] = filtered_params
+            filtered_param_groups.append(param_group)
+
+    optimizer_state_dict['param_groups'] = filtered_param_groups
+    optimizer.load_state_dict(optimizer_state_dict)
+
+    # Load other info like epoch, mIoU, and mPA
     epoch = checkpoint['epoch']
     miou = checkpoint['miou']
-    if 'mpa' in checkpoint:
-        mpa = checkpoint['mpa']
-    else:
-        mpa = 0.0
+    mpa = checkpoint.get('mpa', 0.0)
+
     print(f"Model: {model}")
     print(f"Optimizer: {optimizer}")
     print(f"Epoch: {epoch}")
     print(f"mIOU: {miou}")
     print(f"mPA: {mpa}")
-    print('Model loaded successfully')
+    print('Model and optimizer loaded successfully')
 
     return model, optimizer, epoch, miou, mpa
 
