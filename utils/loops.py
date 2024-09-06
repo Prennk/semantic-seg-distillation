@@ -222,6 +222,7 @@ class Distill:
             distill_loss = 0.0
 
             # Distill loss
+            distill_loss += self.distill_criterion[-1](s_outputs, t_outputs)
             for idx, (t_layer_name, s_layer_name) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
                 t_features = t_intermediate_features[t_layer_name]
                 s_features = s_intermediate_features[s_layer_name]
