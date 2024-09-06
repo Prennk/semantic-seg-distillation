@@ -67,9 +67,7 @@ def main(mode="train"):
         else:
             raise TypeError('Invalid model name. Available models are enet and deeplabv3_resnet101')
         
-        optimizer = optim.SGD(model.parameters(), lr=0.01)
-        model = utils.load_checkpoint(model, optimizer, args.save_dir,
-                                    args.name)[0]
+        model = utils.load_checkpoint(model, args.save_dir, args.name)[0]
         
     elif mode == "distill":
         print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")
