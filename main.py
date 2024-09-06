@@ -191,7 +191,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     for s_shape, t_shape in zip(s_shapes, t_shapes):
         trainable_list.append(VIDLoss(s_shape[1], t_shape[1], t_shape[1]))
 
-    trainable_list.append(s_model)
+    trainable_list.append(s_model).to(args.device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.SGD(
         trainable_list.parameters(),
