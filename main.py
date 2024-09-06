@@ -181,18 +181,20 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     t_model.train()
     s_model.train()
 
+    trainable_list = nn.ModuleList([])
+
     t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers]
     s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers]
     print(f"Teacher layer shapes: {t_shapes}")
     print(f"Student layer shapes: {s_shapes}")
-    vid_criterions = nn.ModuleList(
-        [VIDLoss(s_shape[1], t_shape[1], t_shape[1]).to(args.device) for s_shape, t_shape in zip(s_shapes, t_shapes)]
-    )
-    
+
+    for s_shape, t_shape in zip(s_shapes, t_shapes):
+        trainable_list.append(VIDLoss(s_shape[1], t_shape[1], t_shape[1]))
+
+    trainable_list.append(s_model)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
-    
     optimizer = optim.SGD(
-        list(s_model.parameters()) + list(vid_criterions.parameters()),
+        trainable_list.parameters(),
         lr=args.learning_rate,
         momentum=0.9,
         weight_decay=args.weight_decay)
@@ -223,8 +225,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     # Start Training
     print()
     distill = loops.Distill(
-        t_model, s_model, train_loader, optimizer, criterion, 
-        vid_criterions, metric_iou, metric_pa, args.device)
+        t_model, trainable_list, train_loader, optimizer, criterion, metric_iou, metric_pa, args.device)
     val = loops.Test(s_model, val_loader, criterion, metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))

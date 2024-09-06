@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from tqdm import tqdm
 from collections import OrderedDict
 from timeit import default_timer as timer
@@ -176,13 +177,13 @@ class Distill:
 
     """
 
-    def __init__(self, t_model, s_model, data_loader, optim, criterion, distill_criterion, metric_iou, metric_pa, device):
+    def __init__(self, t_model, trainable_list, data_loader, optim, criterion, metric_iou, metric_pa, device):
         self.t_model = t_model
-        self.s_model = s_model
+        self.s_model = trainable_list[-1]
         self.data_loader = data_loader
         self.optim = optim
         self.criterion = criterion
-        self.distill_criterion = distill_criterion
+        self.distill_criterion = nn.ModuleList(trainable_list[0:-1])
         self.metric_iou = metric_iou
         self.metric_pa = metric_pa
         self.device = device
