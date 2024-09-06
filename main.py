@@ -189,19 +189,14 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         [VIDLoss(s_shape[1], t_shape[1], t_shape[1]).to(args.device) for s_shape, t_shape in zip(s_shapes, t_shapes)]
     )
     
-    # We are going to use the CrossEntropyLoss loss function as it's most
-    # frequentely used in classification problems with multiple classes which
-    # fits the problem. This criterion  combines LogSoftMax and NLLLoss.
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     
     optimizer = optim.SGD(
-        s_model.parameters(),
+        list(s_model.parameters()) + list(vid_criterions.parameters()),
         lr=args.learning_rate,
         momentum=0.9,
         weight_decay=args.weight_decay)
     
-    # Learning rate decay scheduler
-    # lr_updater = optim.lr_scheduler.StepLR(optimizer, args.lr_decay_epochs, args.lr_decay)
     lambda_lr = lambda iter: (1 - float(iter) / args.epochs) ** args.lr_decay
     lr_updater = optim.lr_scheduler.LambdaLR(optimizer, lambda_lr)
 
