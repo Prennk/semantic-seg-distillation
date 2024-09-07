@@ -40,7 +40,7 @@ class VIDLoss(nn.Module):
             nn.ReLU(),
             conv1x1(num_input_channels * 8, num_mid_channel // 2),
             nn.ReLU(),
-            conv1x1(num_input_channels // 2, num_mid_channel),
+            conv1x1(num_mid_channel // 2, num_mid_channel),
             nn.ReLU(),
             conv1x1(num_mid_channel, num_mid_channel),
             nn.ReLU(),
