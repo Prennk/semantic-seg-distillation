@@ -238,6 +238,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
               .format(epoch + 1, epoch_loss, vid_loss, train_miou, train_mpa, last_lr[0], train_time))
         wandb.log({
             "train_loss": epoch_loss,
+            "vid_loss": vid_loss,
             "train_miou": train_miou,
             "train_mpa": train_mpa,
             }, step=epoch + 1)
