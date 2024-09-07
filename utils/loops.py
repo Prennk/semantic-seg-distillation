@@ -196,6 +196,7 @@ class Distill:
         self.s_model.train()
 
         epoch_loss = 0.0
+        vid_loss = 0.0
         self.metric_iou.reset()
         self.metric_pa.reset()
 
@@ -238,6 +239,7 @@ class Distill:
 
             # Keep track of loss for current epoch
             epoch_loss += total_loss.item()
+            vid_loss += distill_loss.item()
 
             # Keep track of the evaluation metric
             self.metric_iou.add(s_outputs.detach(), labels.detach())
@@ -249,4 +251,4 @@ class Distill:
         end_time = timer()
         total_time = end_time - start_time
 
-        return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
+        return epoch_loss / len(self.data_loader), vid_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
