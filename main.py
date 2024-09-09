@@ -16,7 +16,7 @@ from utils import utils, loops, metrics, transforms as ext_transforms, data_util
 from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
-from distiller.vid import VIDLoss
+from distiller.vid import VIDLossWithMask
 from inference import main as inference
 
 wandb.init(project="SemSeg-Distill")
@@ -189,7 +189,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Student layer shapes: {s_shapes}")
 
     for s_shape, t_shape in zip(s_shapes, t_shapes):
-        trainable_list.append(VIDLoss(s_shape[1], t_shape[1] * 2, t_shape[1], num_classes=num_classes))
+        trainable_list.append(VIDLossWithMask(s_shape[1], t_shape[1] * 2, t_shape[1], num_classes=num_classes))
 
     trainable_list.append(s_model).to(args.device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)

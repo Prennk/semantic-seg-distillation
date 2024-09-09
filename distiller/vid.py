@@ -111,8 +111,6 @@ class VIDLossWithMask(nn.Module):
         return class_masks
 
     def forward(self, input, target, labels):
-        B, _, H, W = input.shape
-
         # Pooling for dimension match if needed
         s_H, s_W = input.shape[2], input.shape[3]
         t_H, t_W = target.shape[2], target.shape[3]
