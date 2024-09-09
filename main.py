@@ -189,7 +189,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Student layer shapes: {s_shapes}")
 
     for s_shape, t_shape in zip(s_shapes, t_shapes):
-        trainable_list.append(VIDLoss(s_shape[1], t_shape[1] * 2, t_shape[1]))
+        trainable_list.append(VIDLoss(s_shape[1], t_shape[1] * 2, t_shape[1], num_classes=num_classes))
 
     trainable_list.append(s_model).to(args.device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
