@@ -183,19 +183,14 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     module_list.append(s_model)
     trainable_list.append(s_model)
 
-    t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers] + [t_outputs["out"].shape]
-    s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers] + [s_outputs.shape]
-    print(f"Teacher layer shapes: {t_shapes}")
-    print(f"Student layer shapes: {s_shapes}")
+    t_dim = [t_intermediate_features[layer].shape for layer in args.teacher_layers] + [t_outputs["out"].shape]
+    s_dim = [s_intermediate_features[layer].shape for layer in args.student_layers] + [s_outputs.shape]
+    print(f"Teacher layer shapes: {t_dim}")
+    print(f"Student layer shapes: {s_dim}")
 
     criterion_kd = nn.ModuleList(
-        [VIDLoss(s, t, t) for s, t in zip(s_shapes[1], t_shapes[1])]   
+        [VIDLoss(s, t, t) for s, t in zip(s_dim.shape[1], t_dim.shape[1])]   
         )
-    for idx, (s, t) in enumerate(zip(s_shapes[1], t_shapes[1])):
-        print(idx)
-        print(s)
-        print(t)
-        print()
 
     trainable_list.append(criterion_kd)
 
