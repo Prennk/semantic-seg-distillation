@@ -185,8 +185,8 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     trainable_list = nn.ModuleList([])
     criterion_list = nn.ModuleList([])
 
-    module_list.apend(s_model)
-    trainable_list.apend(s_model)
+    module_list.append(s_model)
+    trainable_list.append(s_model)
 
     t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers] + [t_outputs["out"].shape]
     s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers] + [s_outputs.shape]
