@@ -214,18 +214,15 @@ class Distill:
             # Forward propagation for teacher
             with torch.no_grad():
                 t_outputs, t_intermediate_features = t_model(inputs)
-                print(t_intermediate_features)
-                print()
-                print(t_intermediate_features)
                 if isinstance(t_outputs, OrderedDict):
                     t_outputs = t_outputs['out']
-                feat_t = [v.detach() for k, v in t_intermediate_features] + [t_outputs.detach()]
+                feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
 
             # Forward propagation for student
             s_outputs, s_intermediate_features = s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
                 s_outputs = s_outputs['out']
-            feat_s = [v for k, v in s_intermediate_features] + [s_outputs]
+            feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
             # Loss computation
             loss = criterion_cls(s_outputs, labels)
