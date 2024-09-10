@@ -205,6 +205,9 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         weight_decay=args.weight_decay)
 
     module_list.append(t_model)
+
+    module_list.to(args.device)
+    criterion_list.to(args.device)
     
     lambda_lr = lambda iter: (1 - float(iter) / args.epochs) ** args.lr_decay
     lr_updater = optim.lr_scheduler.LambdaLR(optimizer, lambda_lr)
