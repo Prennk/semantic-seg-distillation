@@ -170,16 +170,11 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
         raise ValueError("Number of layers to distill in teacher and student models do not match.")
 
-    x = torch.randn(1, 3, args.height, args.width).to(args.device) # BCHW
+    x = torch.randn(2, 3, args.height, args.width).to(args.device) # BCHW
     t_model.eval()
     s_model.eval()
-
-    with torch.no_grad():
-        t_outputs, t_intermediate_features = t_model(x)
-        s_outputs, s_intermediate_features = s_model(x)
-
-    t_model.train()
-    s_model.train()
+    t_outputs, t_intermediate_features = t_model(x)
+    s_outputs, s_intermediate_features = s_model(x)
 
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
@@ -194,7 +189,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Student layer shapes: {s_shapes}")
 
     criterion_kd = nn.ModuleList(
-        [VIDLoss(s, t, t) for s, t, in zip(s_shapes, t_shapes)]
+        [VIDLoss(s, t, t) for s, t, in zip(s_shapes[1], t_shapes[1])]   
         )
 
     trainable_list.append(criterion_kd)
