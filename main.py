@@ -189,7 +189,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Student layer shapes: {s_dim}")
 
     criterion_kd = nn.ModuleList(
-        [VIDLoss(s.shape[1], t.shape[1], t.shape[1]) for s, t in zip(s_dim, t_dim)]   
+        [VIDLoss(s[1], t[1], t[1]) for s, t in zip(s_dim, t_dim)]   
         )
 
     trainable_list.append(criterion_kd)
