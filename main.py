@@ -191,7 +191,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     criterion_kd = nn.ModuleList(
         [VIDLoss(s, t, t) for s, t in zip(s_shapes[1], t_shapes[1])]   
         )
-    for idx, (s, t) in zip(s_shapes[1], t_shapes[1]):
+    for idx, (s, t) in enumerate(zip(s_shapes[1], t_shapes[1])):
         print(idx)
         print(s)
         print(t)
