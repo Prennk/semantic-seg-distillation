@@ -177,13 +177,11 @@ class Distill:
 
     """
 
-    def __init__(self, t_model, trainable_list, data_loader, optim, criterion, metric_iou, metric_pa, device):
-        self.t_model = t_model
-        self.s_model = trainable_list[-1]
+    def __init__(self, data_loader, module_list, criterion_list, optim, metric_iou, metric_pa, device):
         self.data_loader = data_loader
+        self.module_list = module_list
+        self.criterion_list = criterion_list
         self.optim = optim
-        self.criterion = criterion
-        self.distill_criterion = nn.ModuleList(trainable_list[0:-1])
         self.metric_iou = metric_iou
         self.metric_pa = metric_pa
         self.device = device
@@ -192,8 +190,16 @@ class Distill:
         """Runs an epoch of training."""
         start_time = timer()
 
-        self.t_model.eval()
-        self.s_model.train()
+        for module in self.module_list:
+            module.train()
+
+        self.module_list[-1].eval()
+
+        criterion_cls = self.criterion_list[0]
+        criterion_kd = self.criterion_list[1]
+
+        s_model = self.module_list[0]
+        t_model = self.module_list[-1]
 
         epoch_loss = 0.0
         vid_loss = 0.0
@@ -207,30 +213,26 @@ class Distill:
 
             # Forward propagation for teacher
             with torch.no_grad():
-                t_outputs, t_intermediate_features = self.t_model(inputs)
+                t_outputs, t_intermediate_features = t_model(inputs)
                 if isinstance(t_outputs, OrderedDict):
                     t_outputs = t_outputs['out']
+                feat_t = [v.detach() for k, v in t_intermediate_features] + [t_outputs.detach()]
 
             # Forward propagation for student
-            s_outputs, s_intermediate_features = self.s_model(inputs)
+            s_outputs, s_intermediate_features = s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
                 s_outputs = s_outputs['out']
+            feat_s = [v for k, v in s_intermediate_features] + [s_outputs]
 
             # Loss computation
-            loss = self.criterion(s_outputs, labels)
-
-            # Reset distill_loss for each batch
-            distill_loss = 0.0
+            loss = criterion_kd(s_outputs, labels)
 
             # Distill loss
-            # distill_loss += self.distill_criterion[-1](s_outputs, t_outputs)
-            for idx, (t_layer_name, s_layer_name) in enumerate(zip(self.t_model.layers_to_hook, self.s_model.layers_to_hook)):
-                t_features = t_intermediate_features[t_layer_name]
-                s_features = s_intermediate_features[s_layer_name]
-                distill_loss += self.distill_criterion[idx](s_features, t_features)
+            loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_kd)]
+            loss_kd = sum(loss_group)
  
             # Total loss
-            total_loss = loss + distill_loss
+            total_loss = loss + loss_kd
 
             # Backpropagation
             self.optim.zero_grad()
@@ -239,7 +241,7 @@ class Distill:
 
             # Keep track of loss for current epoch
             epoch_loss += total_loss.item()
-            vid_loss += distill_loss.item()
+            vid_loss += loss_kd.item()
 
             # Keep track of the evaluation metric
             self.metric_iou.add(s_outputs.detach(), labels.detach())

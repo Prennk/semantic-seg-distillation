@@ -170,7 +170,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
         raise ValueError("Number of layers to distill in teacher and student models do not match.")
 
-    x = torch.randn(1, 3, args.width, args.height).to(args.device)
+    x = torch.randn(1, 3, args.height, args.width).to(args.device) # BCHW
     t_model.eval()
     s_model.eval()
 
@@ -181,23 +181,35 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     t_model.train()
     s_model.train()
 
+    module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
+    criterion_list = nn.ModuleList([])
 
-    t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers]
-    s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers]
+    module_list.apend(s_model)
+    trainable_list.apend(s_model)
+
+    t_shapes = [t_intermediate_features[layer].shape for layer in args.teacher_layers] + [t_outputs["out"].shape]
+    s_shapes = [s_intermediate_features[layer].shape for layer in args.student_layers] + [s_outputs.shape]
     print(f"Teacher layer shapes: {t_shapes}")
     print(f"Student layer shapes: {s_shapes}")
 
-    for s_shape, t_shape in zip(s_shapes, t_shapes):
-        trainable_list.append(VIDLoss(s_shape[1], t_shape[1] * 2, t_shape[1]))
+    criterion_kd = nn.ModuleList(
+        [VIDLoss(s, t, t) for s, t, in zip(s_shapes, t_shapes)]
+        )
 
-    trainable_list.append(s_model).to(args.device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    trainable_list.append(criterion_kd)
+
+    criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
+    criterion_list.append(criterion_cls)
+    criterion_list.append(criterion_kd)
+
     optimizer = optim.SGD(
         trainable_list.parameters(),
         lr=args.learning_rate,
         momentum=0.9,
         weight_decay=args.weight_decay)
+
+    module_list.append(t_model)
     
     lambda_lr = lambda iter: (1 - float(iter) / args.epochs) ** args.lr_decay
     lr_updater = optim.lr_scheduler.LambdaLR(optimizer, lambda_lr)
@@ -224,9 +236,8 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
 
     # Start Training
     print()
-    distill = loops.Distill(
-        t_model, trainable_list, train_loader, optimizer, criterion, metric_iou, metric_pa, args.device)
-    val = loops.Test(s_model, val_loader, criterion, metric_iou, metric_pa, args.device)
+    distill = loops.Distill(train_loader, module_list, criterion_list, optimizer, metric_iou, metric_pa, args.device)
+    val = loops.Test(s_model, val_loader, criterion_list[0], metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))
 
