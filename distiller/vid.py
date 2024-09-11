@@ -100,6 +100,9 @@ class VIDLoss(nn.Module):
         """Apply Sobel edge detection to feature maps"""
         sobel_x = torch.Tensor([[[[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]]]).to(x.device)
         sobel_y = torch.Tensor([[[[-1, -2, -1], [0, 0, 0], [1, 2, 1]]]]).to(x.device)
+
+        sobel_x = sobel_x.expand(x.size(1), 1, 3, 3)
+        sobel_y = sobel_y.expand(x.size(1), 1, 3, 3)
         
         edge_x = F.conv2d(x, sobel_x, padding=1)
         edge_y = F.conv2d(x, sobel_y, padding=1)
