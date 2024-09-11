@@ -104,8 +104,8 @@ class VIDLoss(nn.Module):
         sobel_x = sobel_x.expand(x.size(1), 1, 3, 3)
         sobel_y = sobel_y.expand(x.size(1), 1, 3, 3)
         
-        edge_x = F.conv2d(x, sobel_x, padding=1)
-        edge_y = F.conv2d(x, sobel_y, padding=1)
+        edge_x = F.conv2d(x, sobel_x, groups=x.size(1), padding=1)
+        edge_y = F.conv2d(x, sobel_y, groups=x.size(1), padding=1)
         
         edge_magnitude = torch.sqrt(edge_x ** 2 + edge_y ** 2)
         return edge_magnitude
