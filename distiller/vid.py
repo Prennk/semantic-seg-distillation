@@ -67,8 +67,6 @@ import numpy as np
 
 
 class VIDLoss(nn.Module):
-    """Variational Information Distillation for Knowledge Transfer (CVPR 2019),
-    code from author: https://github.com/ssahn0215/variational-information-distillation"""
     def __init__(self,
                  num_input_channels,
                  num_mid_channel,
@@ -97,7 +95,6 @@ class VIDLoss(nn.Module):
         self.eps = eps
 
     def sobel_edge_detection(self, x):
-        """Apply Sobel edge detection to feature maps"""
         sobel_x = torch.Tensor([[[[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]]]).to(x.device)
         sobel_y = torch.Tensor([[[[-1, -2, -1], [0, 0, 0], [1, 2, 1]]]]).to(x.device)
 
