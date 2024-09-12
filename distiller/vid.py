@@ -128,7 +128,7 @@ class VIDLoss(nn.Module):
 
         target_edge = self.sobel_edge_detection(target)
         input_edge = self.sobel_edge_detection(pred_mean)
-        edge_threshold = 0.1
+        edge_threshold = 0.4
         edge_mask = (target_edge > edge_threshold).float()
         loss = 0.5*(
             (input_edge-target_edge)**2/pred_var+torch.log(pred_var)
