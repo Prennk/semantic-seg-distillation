@@ -212,7 +212,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
 
     # Start Training
     print()
-    distill = loops.Distill(train_loader, module_list, criterion_list, optimizer, metric_iou, metric_pa, args.device)
+    distill = loops.Distill(train_loader, module_list, criterion_list, optimizer, metric_iou, metric_pa, args)
     val = loops.Test(s_model, val_loader, criterion_list[0], metric_iou, metric_pa, args.device)
     for epoch in range(start_epoch, args.epochs):
         print("Epoch: {0:d}".format(epoch + 1))

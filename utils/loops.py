@@ -177,14 +177,13 @@ class Distill:
 
     """
 
-    def __init__(self, data_loader, module_list, criterion_list, optim, metric_iou, metric_pa, device, args):
+    def __init__(self, data_loader, module_list, criterion_list, optim, metric_iou, metric_pa, args):
         self.data_loader = data_loader
         self.module_list = module_list
         self.criterion_list = criterion_list
         self.optim = optim
         self.metric_iou = metric_iou
         self.metric_pa = metric_pa
-        self.device = device
         self.args = args
 
     def run_epoch(self, iteration_loss=False):
@@ -209,8 +208,8 @@ class Distill:
 
         for step, batch_data in enumerate(tqdm(self.data_loader, desc="Training (distillation)")):
             # Get the inputs and labels
-            inputs = batch_data[0].to(self.device)
-            labels = batch_data[1].to(self.device)
+            inputs = batch_data[0].to(self.args.device)
+            labels = batch_data[1].to(self.args.device)
 
             # Forward propagation for teacher
             with torch.no_grad():
