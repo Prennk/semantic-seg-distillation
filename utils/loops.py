@@ -252,7 +252,4 @@ class Distill:
         end_time = timer()
         total_time = end_time - start_time
 
-        return epoch_loss / len(self.data_loader), \
-            cls_loss / len(self.data_loader), \
-            kd_loss / len(self.data_loader), \
-                self.metric_iou.value(), self.metric_pa.value(), total_time
+        return epoch_loss / len(self.data_loader), cls_loss / len(self.data_loader), kd_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
