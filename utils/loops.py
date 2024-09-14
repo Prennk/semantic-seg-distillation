@@ -202,7 +202,8 @@ class Distill:
         t_model = self.module_list[-1]
 
         epoch_loss = 0.0
-        distill_loss = 0.0
+        cls_loss = 0.0
+        kd_loss = 0.0
         self.metric_iou.reset()
         self.metric_pa.reset()
 
@@ -238,7 +239,8 @@ class Distill:
 
             # Keep track of loss for current epoch
             epoch_loss += loss.item()
-            distill_loss += loss_div.item()
+            cls_loss += loss_cls.item()
+            kd_loss += loss_div.item()
 
             # Keep track of the evaluation metric
             self.metric_iou.add(s_outputs.detach(), labels.detach())
@@ -250,4 +252,7 @@ class Distill:
         end_time = timer()
         total_time = end_time - start_time
 
-        return epoch_loss / len(self.data_loader), distill_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
+        return epoch_loss / len(self.data_loader), \
+            cls_loss / len(self.data_loader), \
+            kd_loss / len(self.data_loader), \
+                self.metric_iou.value(), self.metric_pa.value(), total_time
