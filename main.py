@@ -16,7 +16,7 @@ from utils import utils, loops, metrics, transforms as ext_transforms, data_util
 from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
-from distiller.kd import DistillKL
+from distiller.kd import CriterionKD
 from distiller.vid import VIDLoss
 from inference import main as inference
 
@@ -172,7 +172,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     trainable_list.append(s_model)
 
     criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
-    criterion_div = DistillKL(args.kd_T)
+    criterion_div = CriterionKD(args.kd_T)
     criterion_list.append(criterion_cls)
     criterion_list.append(criterion_div)
 
