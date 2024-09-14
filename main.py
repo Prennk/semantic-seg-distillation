@@ -16,6 +16,7 @@ from utils import utils, loops, metrics, transforms as ext_transforms, data_util
 from model.enet import Create_ENet
 from model.deeplabv3_torchvision import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
+from distiller.kd import DistillKL
 from distiller.vid import VIDLoss
 from inference import main as inference
 
@@ -163,19 +164,6 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(f"Creating student model: enet...")
     s_model = Create_ENet(num_classes, layers_to_hook=args.student_layers).to(args.device)
 
-    # print layer to distill
-    print(f"\nTeacher layer to distill: \n{args.teacher_layers}")
-    print(f"Student layer to distill: \n{args.student_layers}")
-
-    if args.teacher_layers and len(args.teacher_layers) != len(args.student_layers):
-        raise ValueError("Number of layers to distill in teacher and student models do not match.")
-
-    x = torch.randn(2, 3, args.height, args.width).to(args.device) # BCHW
-    t_model.eval()
-    s_model.eval()
-    t_outputs, t_intermediate_features = t_model(x)
-    s_outputs, s_intermediate_features = s_model(x)
-
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
     criterion_list = nn.ModuleList([])
@@ -183,20 +171,10 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     module_list.append(s_model)
     trainable_list.append(s_model)
 
-    t_dim = [t_intermediate_features[layer].shape for layer in args.teacher_layers] + [t_outputs["out"].shape]
-    s_dim = [s_intermediate_features[layer].shape for layer in args.student_layers] + [s_outputs.shape]
-    print(f"Teacher layer shapes: {t_dim}")
-    print(f"Student layer shapes: {s_dim}")
-
-    criterion_kd = nn.ModuleList(
-        [VIDLoss(s[1], t[1], t[1]) for s, t in zip(s_dim, t_dim)]   
-        )
-
-    trainable_list.append(criterion_kd)
-
     criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
+    criterion_div = DistillKL(args.kd_T)
     criterion_list.append(criterion_cls)
-    criterion_list.append(criterion_kd)
+    criterion_list.append(criterion_div)
 
     optimizer = optim.SGD(
         trainable_list.parameters(),

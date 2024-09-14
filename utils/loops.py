@@ -177,7 +177,7 @@ class Distill:
 
     """
 
-    def __init__(self, data_loader, module_list, criterion_list, optim, metric_iou, metric_pa, device):
+    def __init__(self, data_loader, module_list, criterion_list, optim, metric_iou, metric_pa, device, args):
         self.data_loader = data_loader
         self.module_list = module_list
         self.criterion_list = criterion_list
@@ -185,6 +185,7 @@ class Distill:
         self.metric_iou = metric_iou
         self.metric_pa = metric_pa
         self.device = device
+        self.args = args
 
     def run_epoch(self, iteration_loss=False):
         """Runs an epoch of training."""
@@ -196,13 +197,13 @@ class Distill:
         self.module_list[-1].eval()
 
         criterion_cls = self.criterion_list[0]
-        criterion_kd = self.criterion_list[1]
+        criterion_div = self.criterion_list[1]
 
         s_model = self.module_list[0]
         t_model = self.module_list[-1]
 
         epoch_loss = 0.0
-        vid_loss = 0.0
+        distill_loss = 0.0
         self.metric_iou.reset()
         self.metric_pa.reset()
 
@@ -216,41 +217,38 @@ class Distill:
                 t_outputs, t_intermediate_features = t_model(inputs)
                 if isinstance(t_outputs, OrderedDict):
                     t_outputs = t_outputs['out']
-                feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
+                # feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
 
             # Forward propagation for student
             s_outputs, s_intermediate_features = s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
                 s_outputs = s_outputs['out']
-            feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
+            # feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
             # Loss computation
-            loss = criterion_cls(s_outputs, labels)
+            loss_cls = criterion_cls(s_outputs, labels)
+            loss_div = criterion_div(s_outputs, t_outputs)
 
-            # Distill loss
-            loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_kd)]
-            loss_kd = sum(loss_group)
- 
             # Total loss
-            total_loss = loss + loss_kd
+            loss = (self.args.gamma * loss_cls) + (self.args.alpha * loss_div)
 
             # Backpropagation
             self.optim.zero_grad()
-            total_loss.backward()
+            loss.backward()
             self.optim.step()
 
             # Keep track of loss for current epoch
-            epoch_loss += total_loss.item()
-            vid_loss += loss_kd.item()
+            epoch_loss += loss.item()
+            distill_loss += loss_div.item()
 
             # Keep track of the evaluation metric
             self.metric_iou.add(s_outputs.detach(), labels.detach())
             self.metric_pa.add(s_outputs.detach(), labels.detach()) 
 
             if iteration_loss:
-                print("[Step: %d] Iteration loss: %.4f" % (step, total_loss.item()))
+                print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
         end_time = timer()
         total_time = end_time - start_time
 
-        return epoch_loss / len(self.data_loader), vid_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
+        return epoch_loss / len(self.data_loader), distill_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
