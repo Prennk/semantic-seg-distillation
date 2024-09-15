@@ -7,10 +7,10 @@ class Create_DeepLabV3_MobileNetV3(nn.Module):
         super(Create_DeepLabV3_MobileNetV3, self).__init__()
         print(f"Preparing model: {args.model}...")
         if args.mode in ["train", "test", "distill"]:
-            if args.pretrained and args.mode != "distill":
+            if args.pretrained:
                 print("Loading pretrained MobileNet_V3_Large_Weights.IMAGENET1K_V2...")
                 weights_backbone = models.MobileNet_V3_Large_Weights.IMAGENET1K_V2
-            elif not args.pretrained or args.mode == "distill":
+            elif not args.pretrained:
                 weights_backbone = None
             else:
                 raise ValueError(f"Unknown pretrained command: {args.pretrained}")
@@ -24,7 +24,7 @@ class Create_DeepLabV3_MobileNetV3(nn.Module):
         self.model.classifier[4] = nn.Conv2d(256, num_classes, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(10, num_classes, kernel_size=1)
 
-        if args.mode in ["train", "test"]:
+        if args.mode in ["train", "test", "distill"]:
             if args.pretrained and args.freeze:
                 # freeze deeplabv3 backbone
                 print(f"Freezing backbone...")
@@ -36,8 +36,6 @@ class Create_DeepLabV3_MobileNetV3(nn.Module):
                 print("[Warning] Pretrained layers is trainable")
             elif not args.pretrained and args.freeze:
                 raise ValueError("You freeze the untrain model backbone")
-        elif args.mode == "distill":
-            print("Preparing DeepLabV3 for teacher...")
         else:
             raise ValueError(f"Unknown argument {args.mode}")
                 
