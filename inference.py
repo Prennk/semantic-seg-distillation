@@ -8,7 +8,8 @@ from torchinfo import summary
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
-from model.deeplabv3_resnet101 import Create_DeepLabV3
+from model.deeplabv3_resnet101 import Create_DeepLabV3_ResNet101
+from model.deeplabv3_mobilenetv3 import Create_DeepLabV3_MobileNetV3
 from model.deeplabv3_custom import get_deeplabv3
 
 parser = ArgumentParser()
@@ -60,8 +61,10 @@ def main(mode="train"):
     if mode in ["train", "test"]:
         if args.model == 'enet':
             model = Create_ENet(num_classes).to(args.device)
-        elif args.model == "deeplabv3_torch":
-            model = Create_DeepLabV3(num_classes, args).to(args.device)
+        elif args.model == "deeplabv3_resnet101":
+            model = Create_DeepLabV3_ResNet101(num_classes, args).to(args.device)
+        elif args.model == "deeplabv3_mobilenetv3":
+            model = Create_DeepLabV3_MobileNetV3(num_classes, args).to(args.device)
         elif args.model == "deeplabv3_cirkd":
             model = get_deeplabv3(num_classes=num_classes, backbone="resnet101", pretrained=True, args=args).to(args.device)
         else:
@@ -71,7 +74,12 @@ def main(mode="train"):
         
     elif mode == "distill":
         print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")
-        model = Create_DeepLabV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
+        if args.model == "deeplabv3_resnet101":
+            model = Create_DeepLabV3_ResNet101(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
+        elif args.model == "deeplabv3_mobilenetv3":
+            model = Create_DeepLabV3_MobileNetV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
+        else:
+            raise TypeError(f'Invalid model name. {args.model}')
 
         # load pretrained teacher
         teacher_dict = torch.load(args.teacher_path, map_location=args.device)["state_dict"]

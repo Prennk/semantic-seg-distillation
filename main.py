@@ -159,9 +159,9 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     # create teacher
     print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")
     if args.model == "deeplabv3_resnet101":
-        t_model = Create_DeepLabV3_ResNet101(num_classes, args).to(args.device)
+        t_model = Create_DeepLabV3_ResNet101(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
     elif args.model == "deeplabv3_mobilenetv3":
-        t_model = Create_DeepLabV3_MobileNetV3(num_classes, args).to(args.device)
+        t_model = Create_DeepLabV3_MobileNetV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
     else:
         raise TypeError(f'Invalid model name. {args.model}')
 
