@@ -164,7 +164,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     teacher_dict = torch.load(args.teacher_path, map_location=args.device)["state_dict"]
     t_model.load_state_dict(teacher_dict)
 
-    print(f"Creating student model: enet...")
+    print(f"Creating student model: {args.model}...")
     if args.model == "enet":
         s_model = Create_ENet(num_classes, layers_to_hook=args.student_layers).to(args.device)
     elif args.model == "deeplabv3_mobilenetv3":
