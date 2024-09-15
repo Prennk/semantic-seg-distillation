@@ -216,14 +216,14 @@ class Distill:
             with torch.no_grad():
                 t_outputs, t_intermediate_features = t_model(inputs)
                 if isinstance(t_outputs, OrderedDict):
-                    t_aux_outputs = ["aux"]
+                    t_aux_outputs = t_outputs["aux"]
                     t_outputs = t_outputs['out']
                 # feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
 
             # Forward propagation for student
             s_outputs, s_intermediate_features = s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
-                s_aux_outputs = ["aux"]
+                s_aux_outputs = s_outputs["aux"]
                 s_outputs = s_outputs['out']
             # feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
