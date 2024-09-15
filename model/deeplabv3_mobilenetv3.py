@@ -2,14 +2,14 @@ import torch.nn as nn
 from torchvision import models
 import torchvision.models.segmentation as seg_model
 
-class Create_DeepLabV3(nn.Module):
+class Create_DeepLabV3_MobileNetV3(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):
-        super(Create_DeepLabV3, self).__init__()
+        super(Create_DeepLabV3_MobileNetV3, self).__init__()
         print(f"Preparing model: {args.model}...")
         if args.mode in ["train", "test", "distill"]:
             if args.pretrained and args.mode != "distill":
-                print("Loading pretrained ResNet101_Weights.IMAGENET1K_V2...")
-                weights_backbone = models.ResNet101_Weights.IMAGENET1K_V2
+                print("Loading pretrained MobileNet_V3_Large_Weights.IMAGENET1K_V2...")
+                weights_backbone = models.MobileNet_V3_Large_Weights.IMAGENET1K_V2
             elif not args.pretrained or args.mode == "distill":
                 weights_backbone = None
             else:
@@ -17,7 +17,7 @@ class Create_DeepLabV3(nn.Module):
         else:
             raise ValueError(f"Unknown argument {args.mode}")
         
-        self.model = seg_model.deeplabv3_resnet101(
+        self.model = seg_model.deeplabv3_mobilenet_v3_large(
                 weights=None, 
                 aux_loss=True,
                 weights_backbone=weights_backbone)

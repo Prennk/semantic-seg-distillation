@@ -8,7 +8,7 @@ from torchinfo import summary
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
-from model.deeplabv3_torchvision import Create_DeepLabV3
+from model.deeplabv3_resnet101 import Create_DeepLabV3
 from model.deeplabv3_custom import get_deeplabv3
 
 parser = ArgumentParser()

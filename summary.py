@@ -1,5 +1,5 @@
 from torchinfo import summary
-from model.deeplabv3_torchvision import Create_DeepLabV3_ResNet101
+from model.deeplabv3_resnet101 import Create_DeepLabV3_ResNet101
 from model.deeplabv3_custom import get_deeplabv3
 from model.enet import Create_ENet
 from utils.utils import merge_args_with_config
