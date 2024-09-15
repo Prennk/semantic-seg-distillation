@@ -74,12 +74,7 @@ def main(mode="train"):
         
     elif mode == "distill":
         print(f"\nLoading teacher model: deeplabv3 from {args.teacher_path}...")
-        if args.model == "deeplabv3_resnet101":
-            model = Create_DeepLabV3_ResNet101(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
-        elif args.model == "deeplabv3_mobilenetv3":
-            model = Create_DeepLabV3_MobileNetV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
-        else:
-            raise TypeError(f'Invalid model name. {args.model}')
+        model = Create_DeepLabV3_ResNet101(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
 
         # load pretrained teacher
         teacher_dict = torch.load(args.teacher_path, map_location=args.device)["state_dict"]
