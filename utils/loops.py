@@ -216,21 +216,28 @@ class Distill:
             with torch.no_grad():
                 t_outputs, t_intermediate_features = t_model(inputs)
                 if isinstance(t_outputs, OrderedDict):
+                    t_aux_outputs = ["aux"]
                     t_outputs = t_outputs['out']
                 # feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
 
             # Forward propagation for student
             s_outputs, s_intermediate_features = s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
+                s_aux_outputs = ["aux"]
                 s_outputs = s_outputs['out']
             # feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
             # Loss computation
+            loss_aux = criterion_cls(s_aux_outputs, labels)
             loss_cls = criterion_cls(s_outputs, labels)
+            loss_cls_total = (0.4 * loss_aux) + loss_cls
+
+            loss_div_aux = criterion_div(s_aux_outputs, t_aux_outputs)
             loss_div = criterion_div(s_outputs, t_outputs)
+            loss_div_total = (0.4 * loss_div_aux) + loss_div
 
             # Total loss
-            loss = (self.args.gamma * loss_cls) + (self.args.alpha * loss_div)
+            loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_div_total)
 
             # Backpropagation
             self.optim.zero_grad()
