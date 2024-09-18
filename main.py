@@ -229,7 +229,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         epoch_loss, cls_loss, kd_loss, (train_iou, train_miou), (train_pa, train_mpa), train_time = distill.run_epoch(args.print_step)
         lr_updater.step()
         last_lr = lr_updater.get_last_lr()
-        print("Result train: {0:d} => Avg. loss: {1:.4f} | CLS loss: {2:.4f} | KD loss: {3:.4f} | mIoU: {4:.4f} | mPA: {5:.4f} | lr: {6} | time elapsed: {7:.3f} seconds"\
+        print("Result train: {0:d} => Avg. loss: {1:.4f} | CLS loss: {2:.4f} | KD loss: {3:.4f} | mIoU: {4:.4f} | mPA: {5:.4f} | lr: {6:.4f} | time elapsed: {7:.3f} seconds"\
               .format(epoch + 1, epoch_loss, cls_loss, kd_loss, train_miou, train_mpa, last_lr[0], train_time))
         wandb.log({
             "train_loss": epoch_loss,
