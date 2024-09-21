@@ -133,7 +133,7 @@ class Test:
             inputs = batch_data[0].to(self.device)
             labels = batch_data[1].to(self.device)
 
-            total_images += input.size(0)
+            total_images += inputs.size(0)
 
             with torch.no_grad():
                 inference_start = timer()
