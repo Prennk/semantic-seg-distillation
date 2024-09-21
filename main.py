@@ -179,14 +179,6 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
 
     t_inter = [v for k, v in t_dict.items()]
     s_inter = [v for k, v in s_dict.items()]
-    print(t_dict)
-    print(type(t_dict))
-    print()
-    print(t_inter)
-    print(type(t_inter))
-    print()
-    print(t_inter[0].shape)
-    print(t_out.shape)
 
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
@@ -198,7 +190,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     if args.distillation == "kd":
         criterion_kd = CriterionKD(args.kd_T)
     elif args.distillation == "vid":
-        t_channels = [t.shape[1] for t in t_inter] + [t_out.shape[1]]
+        t_channels = [t.shape[1] for t in t_inter] + [t_out["out"].shape[1]]
         s_channels = [s.shape[1] for s in s_inter] + [s_out.shape[1]]
         criterion_kd = nn.ModuleList(
             [VIDLoss(s, t, t) for s, t in zip(s_channels, t_channels)]
