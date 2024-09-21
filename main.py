@@ -19,6 +19,7 @@ from model.deeplabv3_mobilenetv3 import Create_DeepLabV3_MobileNetV3
 from model.deeplabv3_custom import get_deeplabv3
 from distiller.kd import CriterionKD
 from distiller.vid import VIDLoss
+from distiller.fsp import FSP
 from inference import main as inference
 
 wandb.init(project="SemSeg-Distill")
@@ -172,6 +173,10 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     else:
         raise TypeError(f'Invalid model name. {args.model}')
 
+    x = torch.randn(2, 3, args.height, args.width)
+    t_out, t_inter = t_model(x)
+    s_out, s_inter = s_model(x)
+
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
     criterion_list = nn.ModuleList([])
@@ -179,10 +184,24 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     module_list.append(s_model)
     trainable_list.append(s_model)
 
+    if args.distillation == "kd":
+        criterion_kd = CriterionKD(args.kd_T)
+    elif args.distillation == "vid":
+        t_channels = [t.shape[1] for t in t_inter] + [t_out.shape[1]]
+        s_channels = [s.shape[1] for s in s_inter] + [s_out.shape[1]]
+        criterion_kd = nn.ModuleList(
+            [VIDLoss(s, t, t) for s, t in zip(s_channels, t_channels)]
+        )
+        trainable_list.append(criterion_kd)
+    elif args.distillation == "fsp":
+        t_shapes = [t.shape for t in t_inter]
+        s_shapes = [s.shape for s in s_inter]
+        criterion_kd = FSP(s_shapes, t_shapes)
+        trainable_list.append(criterion_kd)
+
     criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
-    criterion_div = CriterionKD(args.kd_T)
     criterion_list.append(criterion_cls)
-    criterion_list.append(criterion_div)
+    criterion_list.append(criterion_kd)
 
     optimizer = optim.SGD(
         trainable_list.parameters(),

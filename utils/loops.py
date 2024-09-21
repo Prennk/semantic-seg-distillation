@@ -126,12 +126,17 @@ class Test:
         epoch_loss = 0.0
         self.metric_iou.reset()
         self.metric_pa.reset()
+        total_inference_time = 0.0
+        total_images = 0
         for step, batch_data in enumerate(tqdm(self.data_loader, desc="Testing")):
             # Get the inputs and labels
             inputs = batch_data[0].to(self.device)
             labels = batch_data[1].to(self.device)
 
+            total_images += input.size(0)
+
             with torch.no_grad():
+                inference_start = timer()
                 # Forward propagation
                 outputs, _ = self.model(inputs)
                 
@@ -139,6 +144,9 @@ class Test:
                     outputs = outputs['out']
                 elif isinstance(outputs, list):
                     outputs = outputs[0]
+
+                inference_end = timer()
+                total_inference_time += inference_end - inference_start
 
                 # Loss computation
                 loss = self.criterion(outputs, labels)
@@ -155,6 +163,9 @@ class Test:
 
             if iteration_loss:
                 print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
+
+            inference_speed_per_image = (total_inference_time / total_images) * 1000
+            print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
 
@@ -196,7 +207,7 @@ class Distill:
         self.module_list[-1].eval()
 
         criterion_cls = self.criterion_list[0]
-        criterion_div = self.criterion_list[1]
+        criterion_kd = self.criterion_list[1]
 
         s_model = self.module_list[0]
         t_model = self.module_list[-1]
@@ -218,26 +229,37 @@ class Distill:
                 if isinstance(t_outputs, OrderedDict):
                     t_aux_outputs = t_outputs["aux"]
                     t_outputs = t_outputs['out']
-                # feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
 
             # Forward propagation for student
             s_outputs, s_intermediate_features = s_model(inputs)
             if isinstance(s_outputs, OrderedDict):
                 s_aux_outputs = s_outputs["aux"]
                 s_outputs = s_outputs['out']
-            # feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
             # Loss computation
             loss_aux = criterion_cls(s_aux_outputs, labels)
             loss_cls = criterion_cls(s_outputs, labels)
             loss_cls_total = (0.4 * loss_aux) + loss_cls
 
-            loss_div_aux = criterion_div(s_aux_outputs, t_aux_outputs)
-            loss_div = criterion_div(s_outputs, t_outputs)
-            loss_div_total = (0.4 * loss_div_aux) + loss_div
+            if self.args.distillation == "kd":
+                loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
+                loss_div = criterion_kd(s_outputs, t_outputs)
+                loss_div_total = (0.4 * loss_div_aux) + loss_div
 
-            # Total loss
-            loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_div_total)
+                loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_div_total)
+            elif self.args.distillation == "vid":
+                feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
+                feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
+
+                loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_kd)]
+                loss_kd = sum(loss_group)
+                
+                loss = loss_cls_total + loss_kd
+            elif self.args.distillation == "fsp":
+                loss_group = criterion_kd(s_intermediate_features, t_intermediate_features)
+                loss_kd = sum(loss_group)
+
+                loss = loss_cls_total = loss_kd
 
             # Backpropagation
             self.optim.zero_grad()
