@@ -174,8 +174,11 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         raise TypeError(f'Invalid model name. {args.model}')
 
     x = torch.randn(2, 3, args.height, args.width).to(args.device)
-    t_out, t_inter = t_model(x)
-    s_out, s_inter = s_model(x)
+    t_out, t_dict = t_model(x)
+    s_out, s_dict = s_model(x)
+
+    t_inter = [v for k, v in t_dict.items()]
+    s_inter = [v for k, v in s_dict.items()]
 
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
