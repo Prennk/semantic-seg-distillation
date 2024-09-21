@@ -186,6 +186,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     print(type(t_inter))
     print()
     print(t_inter[0].shape)
+    print(t_out.shape)
 
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
