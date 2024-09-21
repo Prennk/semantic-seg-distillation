@@ -245,9 +245,9 @@ class Distill:
             if self.args.distillation == "kd":
                 loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
                 loss_div = criterion_kd(s_outputs, t_outputs)
-                loss_div_total = (0.4 * loss_div_aux) + loss_div
+                loss_kd = (0.4 * loss_div_aux) + loss_div
 
-                loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_div_total)
+                loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd)
             elif self.args.distillation == "vid":
                 feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
                 feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
@@ -270,7 +270,7 @@ class Distill:
             # Keep track of loss for current epoch
             epoch_loss += loss.item()
             cls_loss += loss_cls.item()
-            kd_loss += loss_div.item()
+            kd_loss += loss_kd.item()
 
             # Keep track of the evaluation metric
             self.metric_iou.add(s_outputs.detach(), labels.detach())

@@ -169,7 +169,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
     if args.model == "enet":
         s_model = Create_ENet(num_classes, layers_to_hook=args.student_layers).to(args.device)
     elif args.model == "deeplabv3_mobilenetv3":
-        s_model = Create_DeepLabV3_MobileNetV3(num_classes, args, layers_to_hook=args.teacher_layers).to(args.device)
+        s_model = Create_DeepLabV3_MobileNetV3(num_classes, args, layers_to_hook=args.student_layers).to(args.device)
     else:
         raise TypeError(f'Invalid model name. {args.model}')
 
