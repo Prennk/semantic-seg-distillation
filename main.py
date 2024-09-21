@@ -179,6 +179,11 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
 
     t_inter = [v for k, v in t_dict.items()]
     s_inter = [v for k, v in s_dict.items()]
+    print(t_dict)
+    print(type(t_dict))
+    print()
+    print(t_inter)
+    print(type(t_inter))
 
     module_list = nn.ModuleList([])
     trainable_list = nn.ModuleList([])
