@@ -163,7 +163,7 @@ class Test:
             total_time = end_time - start_time
 
             if iteration_loss:
-                print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
+                print("[Step: %d] Iteration loss: %.2f" % (step, loss.item()))
 
         inference_speed_per_image = (total_inference_time / total_images) * 1000
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
