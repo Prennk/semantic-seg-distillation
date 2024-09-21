@@ -136,6 +136,7 @@ class Test:
             total_images += inputs.size(0)
 
             with torch.no_grad():
+                torch.cuda.synchronize()
                 inference_start = timer()
                 # Forward propagation
                 outputs, _ = self.model(inputs)
@@ -164,8 +165,8 @@ class Test:
             if iteration_loss:
                 print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
-            inference_speed_per_image = (total_inference_time / total_images) * 1000
-            print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
+        inference_speed_per_image = (total_inference_time / total_images) * 1000
+        print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
 
