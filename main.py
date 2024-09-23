@@ -213,7 +213,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         criterion_vid = nn.ModuleList(
             [VIDLoss(s, t, t) for s, t in zip(s_channels, t_channels)]
         )
-        trainable_list.append(criterion_kd)
+        trainable_list.append(criterion_vid)
 
     criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
     criterion_list.append(criterion_cls)
