@@ -265,8 +265,8 @@ class Distill:
             else:
                 loss_group = criterion_kd.compute_loss(s_outputs, t_outputs, labels, epoch)
                 loss = loss_group[0]
-                cls_loss = loss_group[1]
-                kd_loss = loss_group[2]
+                loss_cls = loss_group[1]
+                loss_kd = loss_group[2]
 
             # Backpropagation
             self.optim.zero_grad()
