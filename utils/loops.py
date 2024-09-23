@@ -198,7 +198,7 @@ class Distill:
         self.metric_pa = metric_pa
         self.args = args
 
-    def run_epoch(self, iteration_loss=False):
+    def run_epoch(self, epoch, iteration_loss=False):
         """Runs an epoch of training."""
         start_time = timer()
 
@@ -208,11 +208,7 @@ class Distill:
         self.module_list[-1].eval()
 
         criterion_cls = self.criterion_list[0]
-        if self.args.distillation == "all":
-            criterion_div = self.criterion_list[1]
-            criterion_vid = self.criterion_list[2]
-        else:
-            criterion_kd = self.criterion_list[1]
+        criterion_kd = self.criterion_list[1]
 
         s_model = self.module_list[0]
         t_model = self.module_list[-1]
@@ -242,42 +238,35 @@ class Distill:
                 s_outputs = s_outputs['out']
 
             # Loss computation
-            loss_aux = criterion_cls(s_aux_outputs, labels)
-            loss_cls = criterion_cls(s_outputs, labels)
-            loss_cls_total = (0.4 * loss_aux) + loss_cls
+            if self.args.distillation != "dtkd":
+                loss_aux = criterion_cls(s_aux_outputs, labels)
+                loss_cls = criterion_cls(s_outputs, labels)
+                loss_cls_total = (0.4 * loss_aux) + loss_cls
 
-            if self.args.distillation == "kd":
-                loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
-                loss_div = criterion_kd(s_outputs, t_outputs)
-                loss_kd = (0.4 * loss_div_aux) + loss_div
+                if self.args.distillation == "kd":
+                    loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
+                    loss_div = criterion_kd(s_outputs, t_outputs)
+                    loss_kd = (0.4 * loss_div_aux) + loss_div
 
-                loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd)
-            elif self.args.distillation == "vid":
-                feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
-                feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
+                    loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd)
+                elif self.args.distillation == "vid":
+                    feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
+                    feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
-                loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_kd)]
-                loss_kd = sum(loss_group)
-                
-                loss = loss_cls_total + loss_kd
-            elif self.args.distillation == "fsp":
-                loss_group = criterion_kd(s_intermediate_features, t_intermediate_features)
-                loss_kd = sum(loss_group)
+                    loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_kd)]
+                    loss_kd = sum(loss_group)
+                    
+                    loss = loss_cls_total + loss_kd
+                elif self.args.distillation == "fsp":
+                    loss_group = criterion_kd(s_intermediate_features, t_intermediate_features)
+                    loss_kd = sum(loss_group)
 
-                loss = loss_cls_total = loss_kd
-            elif self.args.distillation == "all":
-                loss_div_aux = criterion_div(s_aux_outputs, t_aux_outputs)
-                loss_div = criterion_div(s_outputs, t_outputs)
-                loss_kd_1 = (0.4 * loss_div_aux) + loss_div
-
-                feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
-                feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
-
-                loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_vid)]
-                loss_kd_2 = sum(loss_group)
-
-                loss_kd = (self.args.alpha * loss_kd_1) + loss_kd_2
-                loss = (self.args.gamma * loss_cls_total) + loss_kd
+                    loss = loss_cls_total = loss_kd
+            else:
+                loss_group = criterion_kd.compute_loss(s_outputs, t_outputs, labels, epoch)
+                loss = loss_group[0]
+                cls_loss = loss_group[1]
+                kd_loss = loss_group[2]
 
             # Backpropagation
             self.optim.zero_grad()
