@@ -219,7 +219,7 @@ class Distill:
         self.metric_iou.reset()
         self.metric_pa.reset()
 
-        for step, batch_data in enumerate(tqdm(self.data_loader, desc="Training (distillation)")):
+        for step, batch_data in enumerate(tqdm(self.data_loader, desc=f"Training ({self.args.distillation})")):
             # Get the inputs and labels
             inputs = batch_data[0].to(self.args.device)
             labels = batch_data[1].to(self.args.device)

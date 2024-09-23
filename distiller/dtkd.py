@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class DTKD:
+class DTKD(nn.Module):
     def __init__(self, temperature=6.0, alpha=1.0, beta=0.5, warmup=20, ce_loss_weight=1.0):
         self.ce_loss_weight = ce_loss_weight
         self.alpha = alpha
