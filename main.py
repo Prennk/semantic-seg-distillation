@@ -23,6 +23,8 @@ from distiller.fsp import FSP
 from distiller.dtkd import DTKD
 from inference import main as inference
 
+wandb.init(project="SemSeg-Distill")
+
 # get config from config.yaml
 parser = ArgumentParser()
 parser.add_argument('--config', type=str, default='config.yaml', help='Path to the config file')
