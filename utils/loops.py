@@ -208,7 +208,11 @@ class Distill:
         self.module_list[-1].eval()
 
         criterion_cls = self.criterion_list[0]
-        criterion_kd = self.criterion_list[1]
+        if self.args.distillation == "all":
+            criterion_div = self.criterion_list[1]
+            criterion_vid = self.criterion_list[2]
+        else:
+            criterion_kd = self.criterion_list[1]
 
         s_model = self.module_list[0]
         t_model = self.module_list[-1]
@@ -261,6 +265,22 @@ class Distill:
                 loss_kd = sum(loss_group)
 
                 loss = loss_cls_total = loss_kd
+            elif self.args.distillation == "all":
+                loss_div_aux = criterion_div(s_aux_outputs, t_aux_outputs)
+                loss_div = criterion_div(s_outputs, t_outputs)
+                loss_kd_1 = (0.4 * loss_div_aux) + loss_div
+
+                loss_1 = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd_1)
+
+                feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
+                feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
+
+                loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_vid)]
+                loss_kd_2 = sum(loss_group)
+                
+                loss_2 = loss_cls_total + loss_kd_2
+
+                loss = loss_1 + loss_2
 
             # Backpropagation
             self.optim.zero_grad()

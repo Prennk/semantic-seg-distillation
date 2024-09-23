@@ -206,10 +206,22 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         s_shapes = [s.shape for s in s_inter]
         criterion_kd = FSP(s_shapes, t_shapes)
         trainable_list.append(criterion_kd)
+    elif args.distillation == "all":
+        criterion_div = CriterionKD(args.kd_T)
+        t_channels = [t.shape[1] for t in t_inter] + [t_out.shape[1]]
+        s_channels = [s.shape[1] for s in s_inter] + [s_out.shape[1]]
+        criterion_vid = nn.ModuleList(
+            [VIDLoss(s, t, t) for s, t in zip(s_channels, t_channels)]
+        )
+        trainable_list.append(criterion_kd)
 
     criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
     criterion_list.append(criterion_cls)
-    criterion_list.append(criterion_kd)
+    if args.distillation == "all":
+        criterion_list.append(criterion_div)
+        criterion_list.append(criterion_vid)
+    else:
+        criterion_list.append(criterion_kd)
 
     optimizer = optim.SGD(
         trainable_list.parameters(),
