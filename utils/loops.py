@@ -270,17 +270,14 @@ class Distill:
                 loss_div = criterion_div(s_outputs, t_outputs)
                 loss_kd_1 = (0.4 * loss_div_aux) + loss_div
 
-                loss_1 = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd_1)
-
                 feat_t = [v.detach() for k, v in t_intermediate_features.items()] + [t_outputs.detach()]
                 feat_s = [v for k, v in s_intermediate_features.items()] + [s_outputs]
 
                 loss_group = [c(f_s, f_t) for f_s, f_t, c in zip(feat_s, feat_t, criterion_vid)]
                 loss_kd_2 = sum(loss_group)
-                
-                loss_2 = loss_cls_total + loss_kd_2
 
-                loss = loss_1 + loss_2
+                loss_kd = (self.args.alpha * loss_kd_1) + loss_kd_2
+                loss = (self.args.gamma * loss_cls_total) + loss_kd
 
             # Backpropagation
             self.optim.zero_grad()
