@@ -20,8 +20,6 @@ class DTKD(nn.Module):
         # Compute temperature for student and teacher
         logits_student_temp = 2 * logits_student_max / (logits_teacher_max + logits_student_max) * reference_temp
         logits_teacher_temp = 2 * logits_teacher_max / (logits_teacher_max + logits_student_max) * reference_temp
-        print(f"logits_student_temp: {logits_student_temp}")
-        print(f"logits_teacher_temp: {logits_teacher_temp}")
         
         # Compute KL Divergence for our SKD
         ourskd = nn.KLDivLoss(reduction='none')(
