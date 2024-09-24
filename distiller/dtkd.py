@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class DTKD(nn.Module):
-    def __init__(self, temperature=6.0, alpha=1.0, beta=0.5, warmup=20, ce_loss_weight=1.0):
+    def __init__(self, temperature=4.0, alpha=1.0, beta=1., warmup=0, ce_loss_weight=1.0):
         super(DTKD, self).__init__()
         self.ce_loss_weight = ce_loss_weight
         self.alpha = alpha
@@ -40,6 +40,7 @@ class DTKD(nn.Module):
         loss_ce = nn.CrossEntropyLoss()(logits_student, target)
 
         # Total DTKD Loss
-        loss_dtkd = min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd) + self.ce_loss_weight * loss_ce
+        # loss_dtkd = min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd) + self.ce_loss_weight * loss_ce
+        loss_dtkd = 1.0 * (self.alpha * loss_ourskd + self.beta * loss_kd) + self.ce_loss_weight * loss_ce
         
         return loss_dtkd, self.ce_loss_weight * loss_ce, min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd)
