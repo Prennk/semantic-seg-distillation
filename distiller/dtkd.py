@@ -43,4 +43,5 @@ class DTKD(nn.Module):
         # loss_dtkd = min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd) + self.ce_loss_weight * loss_ce
         loss_dtkd = 1.0 * (self.alpha * loss_ourskd + self.beta * loss_kd) + self.ce_loss_weight * loss_ce
         
-        return loss_dtkd, self.ce_loss_weight * loss_ce, min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd)
+        # return loss_dtkd, self.ce_loss_weight * loss_ce, min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd)
+        return loss_dtkd, self.ce_loss_weight * loss_ce, 1.0 * (self.alpha * loss_ourskd + self.beta * loss_kd)
