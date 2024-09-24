@@ -20,6 +20,8 @@ class DTKD(nn.Module):
         # Compute temperature for student and teacher
         logits_student_temp = 2 * logits_student_max / (logits_teacher_max + logits_student_max) * reference_temp
         logits_teacher_temp = 2 * logits_teacher_max / (logits_teacher_max + logits_student_max) * reference_temp
+        print(f"logits_student_temp: {logits_student_temp}")
+        print(f"logits_teacher_temp: {logits_teacher_temp}")
         
         # Compute KL Divergence for our SKD
         ourskd = nn.KLDivLoss(reduction='none')(
@@ -27,6 +29,7 @@ class DTKD(nn.Module):
             F.softmax(logits_teacher / logits_teacher_temp, dim=1)
         )
         loss_ourskd = (ourskd.sum(1, keepdim=True) * logits_teacher_temp * logits_student_temp).mean()
+        print(f"loss_ourskd: {loss_ourskd}")
 
         # Vanilla KD Loss
         vanilla_temp = self.temperature
@@ -35,9 +38,11 @@ class DTKD(nn.Module):
             F.softmax(logits_teacher / vanilla_temp, dim=1)
         )
         loss_kd = (kd.sum(1, keepdim=True) * vanilla_temp ** 2).mean()
+        print(f"loss_kd: {loss_kd}")
 
         # CrossEntropy Loss
         loss_ce = nn.CrossEntropyLoss()(logits_student, target)
+        print(f"loss_ce: {loss_ce}")
 
         # Total DTKD Loss
         loss_dtkd = min(epoch / self.warmup, 1.0) * (self.alpha * loss_ourskd + self.beta * loss_kd) + self.ce_loss_weight * loss_ce
