@@ -263,6 +263,8 @@ class Distill:
 
                     loss = loss_cls_total = loss_kd
             else:
+                print(f"s_outputs: {s_outputs}")
+                print()
                 loss_group = criterion_kd.compute_loss(s_outputs, t_outputs, labels, epoch)
                 loss = loss_group[0]
                 loss_cls = loss_group[1]
