@@ -23,10 +23,20 @@ class DTKD(nn.Module):
         
         # Compute KL Divergence for our SKD
         ourskd = nn.KLDivLoss(reduction='none')(
-            F.log_softmax(logits_student / logits_student_temp + 1e-8, dim=1),
-            F.softmax(logits_teacher / logits_teacher_temp + 1e-8, dim=1)
+            F.log_softmax(logits_student / logits_student_temp, dim=1),
+            F.softmax(logits_teacher / logits_teacher_temp, dim=1)
         )
         loss_ourskd = (ourskd.sum(1, keepdim=True) * logits_teacher_temp * logits_student_temp).mean()
+        print(f"reference_temp: {reference_temp}")
+        print()
+        print(f"logits_student_max: {logits_student_max}")
+        print()
+        print(f"logits_teacher_max: {logits_teacher_max}")
+        print()
+        print(f"logits_student_temp: {logits_student_temp}")
+        print()
+        print(f"logits_teacher_temp: {logits_teacher_temp}")
+        print()
         print(f"loss_ourskd: {loss_ourskd}")
 
         # Vanilla KD Loss
