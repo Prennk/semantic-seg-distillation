@@ -244,6 +244,8 @@ class Distill:
                 loss_cls_total = (0.4 * loss_aux) + loss_cls
 
                 if self.args.distillation == "kd":
+                    print(f"s_outputs: {s_outputs}")
+                    print()
                     loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
                     loss_div = criterion_kd(s_outputs, t_outputs)
                     loss_kd = (0.4 * loss_div_aux) + loss_div
@@ -263,8 +265,6 @@ class Distill:
 
                     loss = loss_cls_total = loss_kd
             else:
-                print(f"s_outputs: {s_outputs}")
-                print()
                 loss_group = criterion_kd.compute_loss(s_outputs, t_outputs, labels, epoch)
                 loss = loss_group[0]
                 loss_cls = loss_group[1]
