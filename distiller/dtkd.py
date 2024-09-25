@@ -27,8 +27,6 @@ class DTKD(nn.Module):
             F.softmax(logits_teacher / logits_teacher_temp, dim=1)
         )
         loss_ourskd = (ourskd.sum(1, keepdim=True) * logits_teacher_temp * logits_student_temp).mean()
-        print(f"reference_temp: {reference_temp}")
-        print()
         print(f"logits_student: {logits_student_max}")
         print()
         print(f"logits_student_max: {logits_student_max}")
