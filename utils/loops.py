@@ -233,9 +233,9 @@ class Distill:
 
             # Forward propagation for student
             s_outputs, s_intermediate_features = s_model(inputs)
-            if isinstance(s_outputs, OrderedDict):
-                s_aux_outputs = s_outputs["aux"]
-                s_outputs = s_outputs['out']
+            # if isinstance(s_outputs, OrderedDict):
+            #     s_aux_outputs = s_outputs["aux"]
+            #     s_outputs = s_outputs['out']
 
             # Loss computation
             # if self.args.distillation != "dtkd":
