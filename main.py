@@ -208,7 +208,7 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         criterion_kd = FSP(s_shapes, t_shapes)
         trainable_list.append(criterion_kd)
     elif args.distillation == "dtkd":
-        criterion_kd = DTKD()
+        criterion_kd = DTKD(args.kd_T)
 
     criterion_cls = nn.CrossEntropyLoss(weight=class_weights)
     criterion_list.append(criterion_cls)
