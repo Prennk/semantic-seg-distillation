@@ -238,14 +238,20 @@ class Distill:
                 s_outputs = s_outputs['out']
 
             # Loss computation
-            loss_aux = criterion_cls(s_aux_outputs, labels)
-            loss_cls = criterion_cls(s_outputs, labels)
-            loss_cls_total = (0.4 * loss_aux) + loss_cls
+            if isinstance(s_outputs, OrderedDict):
+                loss_aux = criterion_cls(s_aux_outputs, labels)
+                loss_cls = criterion_cls(s_outputs, labels)
+                loss_cls_total = (0.4 * loss_aux) + loss_cls
+            else:
+                loss_cls_total = criterion_cls(s_outputs, labels)
 
             if self.args.distillation == "kd":
-                loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
-                loss_div = criterion_kd(s_outputs, t_outputs)
-                loss_kd = (0.4 * loss_div_aux) + loss_div
+                if isinstance(s_outputs, OrderedDict):
+                    loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
+                    loss_div = criterion_kd(s_outputs, t_outputs)
+                    loss_kd = (0.4 * loss_div_aux) + loss_div
+                else:
+                    loss_kd = criterion_kd(s_outputs, t_outputs)
 
                 loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd)
             elif self.args.distillation == "vid":
@@ -262,9 +268,12 @@ class Distill:
 
                 loss = loss_cls_total = loss_kd
             elif self.args.distillation == "dtkd":
-                loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
-                loss_div = criterion_kd(s_outputs, t_outputs)
-                loss_kd = (0.4 * loss_div_aux) + loss_div
+                if isinstance(s_outputs, OrderedDict):
+                    loss_div_aux = criterion_kd(s_aux_outputs, t_aux_outputs)
+                    loss_div = criterion_kd(s_outputs, t_outputs)
+                    loss_kd = (0.4 * loss_div_aux) + loss_div
+                else:
+                    loss_kd = criterion_kd(s_outputs, t_outputs)
 
                 loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd)
 
