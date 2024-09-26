@@ -243,6 +243,7 @@ class Distill:
                 loss_cls = criterion_cls(s_outputs, labels)
                 loss_cls_total = (0.4 * loss_aux) + loss_cls
             else:
+                loss_cls = criterion_cls(s_outputs, labels)
                 loss_cls_total = criterion_cls(s_outputs, labels)
 
             if self.args.distillation == "kd":
