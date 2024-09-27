@@ -184,7 +184,7 @@ class Test:
         self.model.eval()
 
         # Define dummy inputs for tracing (dynamic batch size)
-        dummy_input = torch.randn(1, 3, 360, 480)
+        dummy_input = torch.randn(1, 3, 360, 480).to(self.device)
 
         # Export the traced model to ONNX
         torch.onnx.export(
