@@ -166,6 +166,8 @@ class Test:
                 print("[Step: %d] Iteration loss: %.2f" % (step, loss.item()))
 
         inference_speed_per_image = (total_inference_time / total_images) * 1000
+        print(f"total_inference_time: {total_inference_time}")
+        print(f"total_images: {total_images}")
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
