@@ -168,47 +168,76 @@ class Test:
         inference_speed_per_image = (total_inference_time / total_images) * 1000
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
         
-        input_sample = torch.randn(1, 3, 360, 480).to(self.device)
-        self.export_model(input_sample)
+        self.export_model()
         self.evaluate_exported_model()
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
-    
-    def export_model(self, input_sample, export_path="model_export.pt"):
+
+    def export_model(self, input_sample, export_path="model_export.onnx"):
+        """
+        Exports the model to ONNX format.
+
+        Args:
+            input_sample (torch.Tensor): A sample input tensor to define the model's input shape.
+            export_path (str, optional): Path to save the exported ONNX model. Defaults to "model_export.onnx".
+        """
         self.model.eval()
-        
-        with torch.no_grad():
-            def forward_wrapper(x):
-                return self.model(x).detach()
 
-        traced_model = torch.jit.trace(forward_wrapper, input_sample.to(self.device))
-        traced_model.save(export_path)
-        print("Model has been successfully exported to {export_path}.")
+        # Convert input sample to CPU (ONNX might not support GPU yet)
+        input_sample = input_sample.cpu()
+
+        # Define dummy inputs for tracing (dynamic batch size)
+        dummy_input = torch.randn(1, 3, 360, 480)  # Replace with your actual input shape
+
+        # Export the traced model to ONNX
+        torch.onnx.export(
+            self.model,
+            dummy_input,
+            export_path,
+            opset_version=11,  # Adjust based on your target runtime
+            input_names=["input"],  # Name your input
+            output_names=["output"],  # Name your output
+        )
+
+        print(f"Model has been successfully exported to {export_path}.")
 
 
-    def evaluate_exported_model(self, export_path="model_export.pt"):
-        # Load the exported model
-        loaded_model = torch.jit.load(export_path).to(self.device)
-        loaded_model.eval()
+    def evaluate_exported_model(self, export_path="model_export.onnx"):
+        """
+        Evaluates the exported ONNX model.
+
+        Args:
+            export_path (str, optional): Path to the exported ONNX model. Defaults to "model_export.onnx".
+
+        Returns:
+            float: Inference speed per image in milliseconds.
+        """
+
+        # Load the exported model with an ONNX runtime (replace with your preferred runtime)
+        import onnxruntime as ort  # Example runtime, choose yours
+
+        sess = ort.InferenceSession(export_path)
+        input_name = sess.get_inputs()[0].name  # Get input name from session
 
         total_inference_time = 0.0
         total_images = 0
 
         for step, batch_data in enumerate(tqdm(self.data_loader, desc="Testing Exported Model")):
-            # Get the inputs
-            inputs = batch_data[0].to(self.device)
+            inputs = batch_data[0].cpu()
             total_images += inputs.size(0)
 
-            with torch.no_grad():
-                torch.cuda.synchronize()
-                inference_start = timer()
-                outputs = loaded_model(inputs)
-                inference_end = timer()
+            # Prepare data for ONNX runtime (might need conversion based on runtime)
+            ort_inputs = {input_name: inputs.numpy()}
 
-                total_inference_time += inference_end - inference_start
+            # Run inference
+            inference_start = timer()
+            outputs = sess.run(None, ort_inputs)[0]  # Assuming single output
+            inference_end = timer()
+
+            total_inference_time += inference_end - inference_start
 
         inference_speed_per_image = (total_inference_time / total_images) * 1000
-        print(f"Inference speed for exported model: {inference_speed_per_image:.4f} ms per image")
+        print(f"Inference speed for exported model: {inference_speed_per_image:.2f} ms per image")
 
         return inference_speed_per_image
 
