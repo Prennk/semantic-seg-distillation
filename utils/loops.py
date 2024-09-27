@@ -141,6 +141,7 @@ class Test:
                 inference_start = timer()
                 outputs, _ = self.model(inputs)
                 inference_end = timer()
+                print(f"time: {(inference_end-inference_start) * 1000}")
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
