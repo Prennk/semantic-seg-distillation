@@ -14,6 +14,11 @@ class DTKD(nn.Module):
         logits_teacher_max, _ = logits_teacher.max(dim=1, keepdim=True)
         logits_student_temp = 2 * logits_student_max / (logits_teacher_max + logits_student_max) * reference_temp
         logits_teacher_temp = 2 * logits_teacher_max / (logits_teacher_max + logits_student_max) * reference_temp
+
+        print(f"logits_student_max: {logits_student_max[0][0][0][:5]}")
+        print(f"logits_teacher_max: {logits_teacher_max[0][0][0][:5]}")
+        print(f"logits_student_temp: {logits_student_temp[0][0][0][:5]}")
+        print(f"logits_teacher_temp: {logits_teacher_temp[0][0][0][:5]}")
         
         ourskd = nn.KLDivLoss(reduction='none')(
             F.log_softmax(logits_student / logits_student_temp, dim=1),
