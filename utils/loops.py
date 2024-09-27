@@ -274,7 +274,6 @@ class Distill:
                     loss_div = criterion_kd(s_outputs, t_outputs)
                     loss_kd = (0.4 * loss_div_aux) + loss_div
                 else:
-                    print(f"s_outputs: {s_outputs[0][0][0][:5]}")
                     loss_kd = criterion_kd(s_outputs, t_outputs)
 
                 loss = (self.args.gamma * loss_cls_total) + (self.args.alpha * loss_kd)
