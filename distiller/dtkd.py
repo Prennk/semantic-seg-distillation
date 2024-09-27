@@ -12,8 +12,8 @@ class DTKD(nn.Module):
         reference_temp = self.temperature
         # logits_student_max, _ = logits_student.max(dim=1, keepdim=True)
         # logits_teacher_max, _ = logits_teacher.max(dim=1, keepdim=True)
-        logits_student_prob = torch.nn.functional.softmax(logits_student)
-        logits_teacher_prob = torch.nn.functional.softmax(logits_teacher)
+        logits_student_prob = torch.nn.functional.softmax(logits_student, dim=1)
+        logits_teacher_prob = torch.nn.functional.softmax(logits_teacher, dim=1)
         logits_student_max, _ = logits_student_prob.max(dim=1, keepdim=True)
         logits_teacher_max, _ = logits_teacher_prob.max(dim=1, keepdim=True)
         logits_student_temp = 2 * logits_student_max / (logits_teacher_max + logits_student_max) * reference_temp
