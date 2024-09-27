@@ -322,7 +322,7 @@ class DownsamplingBottleneck(nn.Module):
             main, max_indices = self.main_max1(x)
         else:
             main = self.main_max1(x)
-            max_indices = None
+            max_indices = torch.tensor([])
 
         # Extension branch
         ext = self.ext_conv1(x)
