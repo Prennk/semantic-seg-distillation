@@ -175,12 +175,10 @@ class Test:
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
     
     def export_model(self, input_sample, export_path="model_export.pt"):
-        """Ekspor model dengan tracing dan simpan ke file."""
         self.model.eval()
         
         def forward_wrapper(x):
-            with torch.no_grad():
-                return self.model(x)
+            return self.model(x).detach()
 
         traced_model = torch.jit.trace(forward_wrapper, input_sample.to(self.device))
         traced_model.save(export_path)
