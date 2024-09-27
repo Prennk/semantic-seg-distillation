@@ -191,7 +191,7 @@ class Test:
             self.model,
             dummy_input,
             export_path,
-            opset_version=16,  # Adjust based on your target runtime
+            opset_version=21,  # Adjust based on your target runtime
             input_names=["input"],  # Name your input
             output_names=["output"],  # Name your output
         )
