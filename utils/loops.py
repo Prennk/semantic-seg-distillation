@@ -169,24 +169,26 @@ class Test:
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
         
         input_sample = torch.randn(1, 3, 360, 480).to(self.device)
-        self.export_model(input_sample)
+        self.export_model()
         self.evaluate_exported_model()
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
     
-    def export_model(self, input_sample, export_path="model_export.pt"):
+    def export_model(self, export_path="model_export.pt"):
         """
-        Exports the model to TorchScript format.
+        Exports the model to TorchScript format using scripting.
 
         Keyword arguments:
-        - input_sample (``torch.Tensor``): A sample input tensor for tracing the model.
         - export_path (``str``): Path where the exported model will be saved.
-
         """
         self.model.eval()
-        traced_model = torch.jit.trace(self.model, input_sample.to(self.device))
-        torch.jit.save(traced_model, export_path)
-        print(f"Model has been exported to {export_path}")
+        try:
+            scripted_model = torch.jit.script(self.model)
+            torch.jit.save(scripted_model, export_path)
+            print(f"Model has been successfully exported to {export_path}")
+        except Exception as e:
+            print(f"Failed to export the model: {e}")
+
 
     def evaluate_exported_model(self, export_path="model_export.pt"):
         """
