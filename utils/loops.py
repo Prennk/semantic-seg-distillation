@@ -173,7 +173,7 @@ class Test:
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
 
-    def export_model(self, input_sample, export_path="model_export.onnx"):
+    def export_model(self, export_path="model_export.onnx"):
         """
         Exports the model to ONNX format.
 
@@ -183,11 +183,8 @@ class Test:
         """
         self.model.eval()
 
-        # Convert input sample to CPU (ONNX might not support GPU yet)
-        input_sample = input_sample.cpu()
-
         # Define dummy inputs for tracing (dynamic batch size)
-        dummy_input = torch.randn(1, 3, 360, 480)  # Replace with your actual input shape
+        dummy_input = torch.randn(1, 3, 360, 480)
 
         # Export the traced model to ONNX
         torch.onnx.export(
