@@ -177,8 +177,9 @@ class Test:
     def export_model(self, input_sample, export_path="model_export.pt"):
         self.model.eval()
         
-        def forward_wrapper(x):
-            return self.model(x).detach()
+        with torch.no_grad():
+            def forward_wrapper(x):
+                return self.model(x).detach()
 
         traced_model = torch.jit.trace(forward_wrapper, input_sample.to(self.device))
         traced_model.save(export_path)
