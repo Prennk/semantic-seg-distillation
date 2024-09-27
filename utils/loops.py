@@ -141,7 +141,6 @@ class Test:
                 inference_start = timer()
                 outputs, _ = self.model(inputs)
                 inference_end = timer()
-                print(f"time: {(inference_end-inference_start) * 1000}")
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
@@ -167,11 +166,62 @@ class Test:
                 print("[Step: %d] Iteration loss: %.2f" % (step, loss.item()))
 
         inference_speed_per_image = (total_inference_time / total_images) * 1000
-        print(f"total_inference_time: {total_inference_time * 1000}")
-        print(f"total_images: {total_images}")
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
+        
+        input_sample = torch.randn(1, 3, 360, 480)
+        self.export_model(input_sample)
+        self.evaluate_exported_model()
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
+    
+    def export_model(self, input_sample, export_path="model_export.pt"):
+        """
+        Exports the model to TorchScript format.
+
+        Keyword arguments:
+        - input_sample (``torch.Tensor``): A sample input tensor for tracing the model.
+        - export_path (``str``): Path where the exported model will be saved.
+
+        """
+        self.model.eval()
+        traced_model = torch.jit.trace(self.model, input_sample.to(self.device))
+        torch.jit.save(traced_model, export_path)
+        print(f"Model has been exported to {export_path}")
+
+    def evaluate_exported_model(self, export_path="model_export.pt"):
+        """
+        Evaluates the inference speed of the exported TorchScript model.
+
+        Keyword arguments:
+        - export_path (``str``): Path where the exported model is saved.
+
+        Returns:
+        - Inference speed per image (ms/image).
+        """
+        # Load the exported model
+        loaded_model = torch.jit.load(export_path).to(self.device)
+        loaded_model.eval()
+
+        total_inference_time = 0.0
+        total_images = 0
+
+        for step, batch_data in enumerate(tqdm(self.data_loader, desc="Testing Exported Model")):
+            # Get the inputs
+            inputs = batch_data[0].to(self.device)
+            total_images += inputs.size(0)
+
+            with torch.no_grad():
+                torch.cuda.synchronize()
+                inference_start = timer()
+                outputs = loaded_model(inputs)
+                inference_end = timer()
+
+                total_inference_time += inference_end - inference_start
+
+        inference_speed_per_image = (total_inference_time / total_images) * 1000
+        print(f"Inference speed for exported model: {inference_speed_per_image:.4f} ms per image")
+
+        return inference_speed_per_image
 
 
 class Distill:
@@ -302,3 +352,4 @@ class Distill:
         total_time = end_time - start_time
 
         return epoch_loss / len(self.data_loader), cls_loss / len(self.data_loader), kd_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
+    
