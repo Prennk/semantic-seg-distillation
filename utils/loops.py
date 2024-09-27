@@ -187,7 +187,7 @@ class Test:
             torch.jit.save(scripted_model, export_path)
             print(f"Model has been successfully exported to {export_path}")
         except Exception as e:
-            print(f"Failed to export the model: {e}")
+            assert(f"Failed to export the model: {e}")
 
 
     def evaluate_exported_model(self, export_path="model_export.pt"):
