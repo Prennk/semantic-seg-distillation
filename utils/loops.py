@@ -191,7 +191,7 @@ class Test:
             self.model,
             dummy_input,
             export_path,
-            opset_version=11,  # Adjust based on your target runtime
+            opset_version=16,  # Adjust based on your target runtime
             input_names=["input"],  # Name your input
             output_names=["output"],  # Name your output
         )
@@ -210,8 +210,8 @@ class Test:
             float: Inference speed per image in milliseconds.
         """
 
-        # Load the exported model with an ONNX runtime (replace with your preferred runtime)
-        import onnxruntime as ort  # Example runtime, choose yours
+        # Load the exported model with an ONNX runtime
+        import onnxruntime as ort  # type: ignore
 
         sess = ort.InferenceSession(export_path)
         input_name = sess.get_inputs()[0].name  # Get input name from session
