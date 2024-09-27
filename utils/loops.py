@@ -168,7 +168,7 @@ class Test:
         inference_speed_per_image = (total_inference_time / total_images) * 1000
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
         
-        input_sample = torch.randn(1, 3, 360, 480)
+        input_sample = torch.randn(1, 3, 360, 480).to(self.device)
         self.export_model(input_sample)
         self.evaluate_exported_model()
 
