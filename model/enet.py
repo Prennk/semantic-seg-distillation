@@ -322,7 +322,6 @@ class DownsamplingBottleneck(nn.Module):
             main, max_indices = self.main_max1(x)
         else:
             main = self.main_max1(x)
-            max_indices = torch.tensor([])
 
         # Extension branch
         ext = self.ext_conv1(x)
@@ -332,8 +331,7 @@ class DownsamplingBottleneck(nn.Module):
 
         # Main branch channel padding
         n, ch_ext, h, w = ext.size()
-        # ch_main = main.size()[1]
-        ch_main = main.size(1)
+        ch_main = main.size()[1]
         padding = torch.zeros(n, ch_ext - ch_main, h, w)
 
         # Before concatenating, check if main is on the CPU or GPU and
