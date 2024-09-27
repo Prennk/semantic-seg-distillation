@@ -137,16 +137,16 @@ class Test:
 
             with torch.no_grad():
                 torch.cuda.synchronize()
-                inference_start = timer()
                 # Forward propagation
+                inference_start = timer()
                 outputs, _ = self.model(inputs)
+                inference_end = timer()
                 
                 if isinstance(outputs, OrderedDict):
                     outputs = outputs['out']
                 elif isinstance(outputs, list):
                     outputs = outputs[0]
 
-                inference_end = timer()
                 total_inference_time += inference_end - inference_start
 
                 # Loss computation
