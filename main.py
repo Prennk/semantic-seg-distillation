@@ -292,13 +292,13 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
             utils.save_checkpoint(s_model, optimizer, epoch + 1, best_miou, best_mpa, args)
 
         if (epoch + 1) % 10 == 0 or (epoch + 1) == args.epochs:
-            images, _ = next(iter(val_loader))
-            predict(s_model, images[:1], class_encoding, epoch)
+            images, labels = next(iter(val_loader))
+            predict(s_model, images[:1], labels[:1], class_encoding, epoch)
 
     return s_model, best_epoch, best_miou
 
 
-def predict(model, images, class_encoding, epoch):
+def predict(model, images, labels, class_encoding, epoch):
     images = images.to(args.device)
 
     # Make predictions!
@@ -317,10 +317,12 @@ def predict(model, images, class_encoding, epoch):
         transforms.ToTensor()
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
+    color_labels = utils.batch_transform(labels.cpu(), label_to_rgb)
     # utils.imshow_batch(images.data.cpu(), color_predictions)
 
     wandb.log({
-        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
+        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions],
+        "ground_truth": [wandb.Image(gt, caption="Ground Truth") for gt in color_labels]
     }, step=epoch + 1)
 
 
