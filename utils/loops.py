@@ -167,9 +167,6 @@ class Test:
 
         inference_speed_per_image = (total_inference_time / total_images) * 1000
         print(f"Inference speed: {inference_speed_per_image:.4f} ms per image")
-        
-        self.export_model()
-        self.evaluate_exported_model()
 
         return epoch_loss / len(self.data_loader), self.metric_iou.value(), self.metric_pa.value(), total_time
 
