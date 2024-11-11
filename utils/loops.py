@@ -136,7 +136,8 @@ class Test:
             total_images += inputs.size(0)
 
             with torch.no_grad():
-                torch.cuda.synchronize()
+                if self.device == "cuda":
+                    torch.cuda.synchronize()
                 # Forward propagation
                 inference_start = timer()
                 outputs, _ = self.model(inputs)

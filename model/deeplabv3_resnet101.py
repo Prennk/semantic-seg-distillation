@@ -5,7 +5,10 @@ import torchvision.models.segmentation as seg_model
 class Create_DeepLabV3_ResNet101(nn.Module):
     def __init__(self, num_classes, args, layers_to_hook=None):
         super(Create_DeepLabV3_ResNet101, self).__init__()
-        print(f"Preparing model: {args.model}...")
+        if args.model == "distill":
+            print(f"Preparing model teacher: DeepLabV3-ResNet101...")
+        elif args.model == "train":
+            print(f"Preparing model: {args.model}...")
         if args.mode in ["train", "test", "distill"]:
             if args.pretrained and args.mode != "distill":
                 print("Loading pretrained ResNet101_Weights.IMAGENET1K_V2...")
