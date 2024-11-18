@@ -178,43 +178,44 @@ def predict(model, images, class_encoding, epoch):
 
 # Run only if this module is being run directly
 if __name__ == '__main__':
-    elapsed_start_time = timer()
-    print(f"Teacher Result:")
-    inference(mode=args.mode)
-    print()
+    # elapsed_start_time = timer()
+    # print(f"Teacher Result:")
+    # inference(mode=args.mode)
+    # print()
 
-    # seed everything
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
-    random.seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
+    # # seed everything
+    # torch.manual_seed(args.seed)
+    # np.random.seed(args.seed)
+    # random.seed(args.seed)
+    # torch.cuda.manual_seed(args.seed)
+    # torch.cuda.manual_seed_all(args.seed)
 
-    # Fail fast if the dataset directory doesn't exist
-    assert os.path.isdir(
-        args.dataset_dir), "The directory \"{0}\" doesn't exist.".format(
-            args.dataset_dir)
+    # # Fail fast if the dataset directory doesn't exist
+    # assert os.path.isdir(
+    #     args.dataset_dir), "The directory \"{0}\" doesn't exist.".format(
+    #         args.dataset_dir)
 
-    # Fail fast if the saving directory doesn't exist
-    assert os.path.isdir(
-        args.save_dir), "The directory \"{0}\" doesn't exist.".format(
-            args.save_dir)
+    # # Fail fast if the saving directory doesn't exist
+    # assert os.path.isdir(
+    #     args.save_dir), "The directory \"{0}\" doesn't exist.".format(
+    #         args.save_dir)
 
-    # Import the requested dataset
-    if args.dataset.lower() == 'camvid':
-        from data.camvid import CamVid as dataset
-    elif args.dataset.lower() == 'cityscapes':
-        raise NameError('Dataset too big')
-        # from data import Cityscapes as dataset
-    else:
-        # Should never happen...but just in case it does
-        raise RuntimeError("\"{0}\" is not a supported dataset.".format(
-            args.dataset))
+    # # Import the requested dataset
+    # if args.dataset.lower() == 'camvid':
+    #     from data.camvid import CamVid as dataset
+    # elif args.dataset.lower() == 'cityscapes':
+    #     raise NameError('Dataset too big')
+    #     # from data import Cityscapes as dataset
+    # else:
+    #     # Should never happen...but just in case it does
+    #     raise RuntimeError("\"{0}\" is not a supported dataset.".format(
+    #         args.dataset))
 
-    loaders, w_class, class_encoding = data_utils.load_dataset(dataset, args)
-    train_loader, val_loader, test_loader = loaders
+    # loaders, w_class, class_encoding = data_utils.load_dataset(dataset, args)
+    # train_loader, val_loader, test_loader = loaders
 
-    model, epoch, miou = train_ensemble_kd(train_loader, val_loader, w_class, class_encoding, args)
+    # model, epoch, miou = train_ensemble_kd(train_loader, val_loader, w_class, class_encoding, args)
 
-    elapsed_end_time = timer()
-    print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
+    # elapsed_end_time = timer()
+    # print(f"Elapsed time: {elapsed_end_time-elapsed_start_time:.3f} seconds")
+    print("Kode ini belum selesai")
