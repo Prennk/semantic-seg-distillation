@@ -10,7 +10,6 @@ import random
 from collections import OrderedDict
 from timeit import default_timer as timer
 from torchinfo import summary
-import wandb # type: ignore
 
 from utils import utils, loops, metrics, transforms as ext_transforms, data_utils
 from model.enet import Create_ENet
@@ -23,7 +22,6 @@ from distiller.fsp import FSP
 from distiller.dtkd import DTKD
 from inference import main as inference
 
-wandb.init(project="SemSeg-Distill")
 
 # get config from config.yaml
 parser = ArgumentParser()
@@ -32,8 +30,6 @@ args = parser.parse_args()
 with open(args.config, 'r') as f:
     config = yaml.safe_load(f)
 args = utils.merge_args_with_config(args, config)
-
-wandb.config.update(args)
 
 # print config from config.yaml
 print("-" * 70)
@@ -120,21 +116,11 @@ def train(train_loader, val_loader, class_weights, class_encoding, args):
         print("Result train: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | lr: {4} | time elapsed: {5:.3f} seconds"\
               .format(epoch + 1, epoch_loss, train_miou, train_mpa, last_lr[0], train_time))
         lr_updater.step()
-        wandb.log({
-            "train_loss": epoch_loss,
-            "train_miou": train_miou,
-            "train_mpa": train_mpa,
-            }, step=epoch + 1)
 
         # test
         test_loss, (test_iou, test_miou), (test_pa, test_mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, test_loss, test_miou, test_mpa, test_time))
-        wandb.log({
-            "val_loss": test_loss,
-            "val_miou": test_miou,
-            "val_mpa": test_mpa
-            }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if test_miou > best_miou:
@@ -261,23 +247,11 @@ def distill(train_loader, val_loader, class_weights, class_encoding, args):
         last_lr = lr_updater.get_last_lr()
         print("Result train: {0:d} => Avg. loss: {1:.4f} | CLS loss: {2:.4f} | KD loss: {3:.4f} | mIoU: {4:.4f} | mPA: {5:.4f} | lr: {6:.4f} | time elapsed: {7:.3f} seconds"\
               .format(epoch + 1, epoch_loss, cls_loss, kd_loss, train_miou, train_mpa, last_lr[0], train_time))
-        wandb.log({
-            "train_loss": epoch_loss,
-            "cls_loss": cls_loss,
-            "kd_loss": kd_loss,
-            "train_miou": train_miou,
-            "train_mpa": train_mpa,
-            }, step=epoch + 1)
 
         # test
         test_loss, (test_iou, test_miou), (test_pa, test_mpa), test_time = val.run_epoch(args.print_step)
         print("Result Val: {0:d} => Avg. loss: {1:.4f} | mIoU: {2:.4f} | mPA: {3:.4f} | time elapsed: {4:.3f} seconds"\
               .format(epoch + 1, test_loss, test_miou, test_mpa, test_time))
-        wandb.log({
-            "val_loss": test_loss,
-            "val_miou": test_miou,
-            "val_mpa": test_mpa
-            }, step=epoch + 1)
 
         # Print per class IoU on last epoch or if best iou
         if test_miou > best_miou:
@@ -318,10 +292,6 @@ def predict(model, images, class_encoding, epoch):
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
     # utils.imshow_batch(images.data.cpu(), color_predictions)
-
-    wandb.log({
-        "segmentation_map": [wandb.Image(image, caption="Segmentation Map") for image in color_predictions]
-    }, step=epoch + 1)
 
 
 # Run only if this module is being run directly

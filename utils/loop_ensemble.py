@@ -21,8 +21,6 @@ class Distill_Ensemble:
         for module in self.module_list:
             module.train()
 
-        self.module_list[-1].eval()
-
         criterion_cls = self.criterion_list[0]
         criterion_kd = self.criterion_list[1]
 
@@ -30,6 +28,10 @@ class Distill_Ensemble:
         t_model_1 = self.module_list[1]
         t_model_2 = self.module_list[2]
         t_model_3 = self.module_list[3]
+
+        t_model_1.eval()
+        t_model_2.eval()
+        t_model_3.eval()
 
         epoch_loss = 0.0
         cls_loss = 0.0
